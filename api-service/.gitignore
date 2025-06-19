@@ -31,13 +31,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-### Eclipse ###
-.classpath
-.project
-.settings/
-
-/api-service/target/
-/api-service/.classpath
-/api-service/.project
-/api-service/.settings/
