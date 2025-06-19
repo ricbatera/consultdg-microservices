@@ -5,3 +5,4 @@ Este projeto reúne a suíte de micro serviços da ConsultDG, projetada para ofe
 ## Microserviços Disponíveis
 
 - **api-service**: Responsável por gerenciar as requisições de entrada e orquestrar a comunicação entre os demais microserviços.
+- **s3-service**: Gerencia o armazenamento e a recuperação de arquivos utilizando a integração com o Amazon S3, garantindo segurança e alta disponibilidade dos dados.
