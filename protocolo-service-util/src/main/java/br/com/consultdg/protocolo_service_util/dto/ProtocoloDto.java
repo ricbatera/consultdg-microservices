@@ -1,12 +1,13 @@
-package br.com.consultdg.protocolo_service_util.dto.request;
+package br.com.consultdg.protocolo_service_util.dto;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import br.com.consultdg.protocolo_service_util.enums.StatusProtocolo;
 
-public class ProtocoloRequest {
-
-    
+public class ProtocoloDto  implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private Long id;
     private String numeroProtocolo;
     private String sistemaOrigem;
     private LocalDateTime dataHoraCriacao;
@@ -14,14 +15,21 @@ public class ProtocoloRequest {
     private LocalDateTime dataHoraFinalizacao;
     private StatusProtocolo statusProtocolo;
     private String mensagemErro;
-
-    public ProtocoloRequest(){}
-
-    public ProtocoloRequest(String sistemaOrigem) {
+    public ProtocoloDto() {}
+    public ProtocoloDto(String sistemaOrigem) {
         this.sistemaOrigem = sistemaOrigem;
         this.dataHoraCriacao = LocalDateTime.now();
         this.statusProtocolo = StatusProtocolo.CRIADO;
         this.numeroProtocolo = generateProtocol(sistemaOrigem, dataHoraCriacao);
+    }
+    public static long getSerialversionuid() {
+        return serialVersionUID;
+    }
+    public Long getId() {
+        return id;
+    }
+    public void setId(Long id) {
+        this.id = id;
     }
     public String getNumeroProtocolo() {
         return numeroProtocolo;
@@ -66,7 +74,7 @@ public class ProtocoloRequest {
         this.mensagemErro = mensagemErro;
     }
 
-    /**
+        /**
      * Gera um número de protocolo no formato SIST-YYYYMMDD-HHMMSS-XXXX
      * @param sistemaOrigem Prefixo do sistema de origem (ex: SIST)
      * @param dataHora Data e hora para compor o protocolo
@@ -78,5 +86,5 @@ public class ProtocoloRequest {
         String data = String.format("%04d%02d%02d", dataHora.getYear(), dataHora.getMonthValue(), dataHora.getDayOfMonth());
         return String.format("%s-%s-%s", sistemaOrigem, data, now);
     }
-
+    
 }
