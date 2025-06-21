@@ -14,7 +14,7 @@ public class EventosProtocoloBoletoRequest {
     private Long idProtocolo;
     private SubStatusEventosBoleto subStatusEvento;
     private TipoEvento tipoEvento;
-    private LocalDateTime dataHoraCriacao;
+    private LocalDateTime dataHoraCriacao = LocalDateTime.now();
 
 
     public EventosProtocoloBoletoRequest() {}

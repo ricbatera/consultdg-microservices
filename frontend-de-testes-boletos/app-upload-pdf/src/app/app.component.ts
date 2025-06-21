@@ -114,7 +114,7 @@ export class AppComponent {
     this.uploadError = null;
     for (const file of this.selectedFiles) {
       try {
-        const fileName = `boletos/recebidos/${file.name}`;
+        const fileName = `${file.name}`;
         // const presigned = await this.uploadService.getPresignedUrl(fileName).toPromise();
         // const presigned = "";
         this.uploadService.getPresignedUrl(fileName).subscribe(res=>{

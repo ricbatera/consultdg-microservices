@@ -6,13 +6,13 @@ import { map, Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class UploadService {
-  private backendUrl = 'http://localhost:8090';
+  private backendUrl = 'http://localhost:8010';
 
   constructor(private http: HttpClient) {}
 
   getPresignedUrl(fileName: string): Observable<string> {
     return this.http.get<{ url: string }>(
-      `${this.backendUrl}/s3/generate-presigned-url?fileName=${encodeURIComponent(fileName)}`
+      `${this.backendUrl}/api/boletos/get-url-to-upload-s3?fileName=${encodeURIComponent(fileName)}`
     ).pipe(
       map(response => response.url)
     );

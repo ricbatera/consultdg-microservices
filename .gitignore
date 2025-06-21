@@ -41,3 +41,17 @@ build/
 /api-service/.classpath
 /api-service/.project
 /api-service/.settings/
+/aws-service/target/
+/aws-service/.classpath
+/api-boleto-service/target/
+/aws-service/.project
+/config-server/target/
+/config-server/.classpath
+/database-mysql-service/target/
+/database-mysql-service/.classpath
+/protocolo-service/target/
+/protocolo-service/.classpath
+/protocolo-service-util/target/
+/protocolo-service-util/.classpath
+/frontend-de-testes-boletos/dist/
+/frontend-de-testes-boletos/node_modules/
