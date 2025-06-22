@@ -53,4 +53,9 @@ public class ProtocoloController {
         return response;
     }
     
+    @GetMapping("/hello")
+	public String hello() {
+		return "Hello, Protocolo Service is running! Controller name: ProtocoloController";
+	}
+    
 }

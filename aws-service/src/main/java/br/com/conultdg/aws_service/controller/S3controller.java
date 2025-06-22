@@ -23,7 +23,10 @@ import br.com.consultdg.protocolo_service_util.enums.boletos.SubStatusEventosBol
 import br.com.consultdg.protocolo_service_util.enums.boletos.TipoEvento;
 import br.com.conultdg.aws_service.config.S3Config;
 import br.com.conultdg.aws_service.service.RegistraProtocoloService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "AWS", description = "Controller para gerenciamento de requisições do AWS S3")
 @CrossOrigin
 @RestController
 @RequestMapping("/s3")
@@ -44,6 +47,7 @@ public class S3controller {
     private RegistraProtocoloService registraEventoProtocoloService;
 
     @GetMapping("/generate-presigned-url")
+    @Operation(summary = "Obtém a URL para upload de arquivos S3", description = "Gera uma URL pré-assinada para upload de arquivos no S3.")
     public ResponseEntity<String> generatePresignedUrl(@RequestParam String fileName, @RequestParam(required = true) Long protocoloId) {
         logger.info("Gerando URL pre-signed para o arquivo: {}", fileName + " no seguinte caminho: " + pathRecebidos);
         String keyS3 = pathRecebidos + fileName;
@@ -72,5 +76,10 @@ public class S3controller {
         }
 
     }
+    
+    @GetMapping("/hello")
+	public String hello() {
+		return "Hello, AWS S3 Service is running! Controller name: " + this.getClass().getSimpleName();
+	}
 
 }
