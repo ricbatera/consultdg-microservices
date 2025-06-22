@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 
-@FeignClient(name = "${services.s3-service.name}", url = "${services.s3-service.url}")
+@FeignClient(name = "${services.s3-service.name}")
 public interface S3ServiceProxy {
 
     @GetMapping("/s3/generate-presigned-url")

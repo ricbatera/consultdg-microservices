@@ -12,6 +12,7 @@ target/
 .settings
 .springBeans
 .sts4-cache
+.metadata
 
 ### IntelliJ IDEA ###
 .idea
@@ -55,3 +56,5 @@ build/
 /protocolo-service-util/.classpath
 /frontend-de-testes-boletos/dist/
 /frontend-de-testes-boletos/node_modules/
+/eureka-naming-server/target/
+/eureka-naming-server/.classpath

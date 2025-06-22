@@ -11,7 +11,7 @@ import br.com.consultdg.protocolo_service_util.dto.boletos.EventosProtocoloBolet
 import br.com.consultdg.protocolo_service_util.dto.response.NovoProtocoloResponse;
 
 // @FeignClient(name = "protocolo-service", url = "http://localhost:8091")
-@FeignClient(name = "${services.protocolo-service.name}", url = "${services.protocolo-service.url}")
+@FeignClient(name = "${services.protocolo-service.name}")
 public interface ProtocoloServiceProxy {
 
     @PostMapping("/protocolo-service/novo-protocolo")

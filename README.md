@@ -8,6 +8,10 @@ Este projeto reúne a suíte de micro serviços da ConsultDG, projetada para ofe
 - **s3-service**: Gerencia o armazenamento e a recuperação de arquivos utilizando a integração com o Amazon S3, garantindo segurança e alta disponibilidade dos dados.
 - **protocolo-service**: Responsável por realizar o acompanhamento fim-a-fim dos fluxos das requisições, registrando cada etapa percorrida até a conclusão. Todos os demais microserviços se conectam a este serviço para registrar suas atividades, garantindo rastreabilidade, auditoria e visibilidade completa do ciclo de vida das operações.
 
+## Service Discovery
+
+- **Eureka Naming Server**: Utilizado como service registry para todos os microserviços da suíte. O Eureka permite que os serviços registrem suas instâncias e descubram uns aos outros dinamicamente, facilitando o balanceamento de carga, a escalabilidade e a resiliência da arquitetura distribuída.
+
 ## Serviços de Apoio
 
 - **protocolo-service**: Responsável por gerenciar o estado do fluxo dos processos, acompanhando cada etapa até a sua conclusão.
