@@ -18,10 +18,10 @@ pipeline {
             steps {
                 script {
                     def services = [
+                        'protocolo-service-util',
                         'database-mysql-service',
                         'api-gateway',
-                        'eureka-naming-server',
-                        'protocolo-service-util'
+                        'eureka-naming-server'
                     ]
                     for (service in services) {
                         dir(service) {
