@@ -25,7 +25,7 @@ pipeline {
                     ]
                     for (service in services) {
                         dir(service) {
-                            sh 'mvn clean package -DskipTests'
+                            sh 'mvn clean install -DskipTests'
                         }
                     }
                 }
