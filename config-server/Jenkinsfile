@@ -1,0 +1,62 @@
+pipeline {
+    agent any
+
+    environment {
+        REGISTRY = "ricardo1782"
+        SERVICE = "config-server"
+        TAG = "latest"
+    }
+
+    stages {
+        stage('Clonar código') {
+            steps {
+                git branch: 'main', url: 'https://github.com/ricbatera/consultdg-microservices.git'
+            }
+        }
+        stage('Build Maven') {
+            steps {
+                dir('config-server') {
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
+        }
+        stage('Build Docker') {
+            steps {
+                dir('config-server') {
+                    script {
+                        def version = sh(script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
+                        if (!version || version.contains('project.version')) {
+                            version = TAG
+                        }
+                        sh "docker build -t ${REGISTRY}/${SERVICE}:${TAG} -t ${REGISTRY}/${SERVICE}:${version} ."
+                    }
+                }
+            }
+        }
+        stage('Push Docker') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push ${REGISTRY}/${SERVICE}:${TAG}
+                        docker push ${REGISTRY}/${SERVICE}:$(mvn -f config-server/pom.xml help:evaluate -Dexpression=project.version -q -DforceStdout || echo latest)
+                        docker logout
+                    '''
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'docker compose -f config-server/docker-compose.yml up -d --remove-orphans'
+            }
+        }
+    }
+    post {
+        success {
+            echo '✅ Config-server atualizado com sucesso!'
+        }
+        failure {
+            echo '❌ Ocorreu um erro na pipeline. Verifique os logs!'
+        }
+    }
+}
