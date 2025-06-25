@@ -36,7 +36,7 @@ pipeline {
             steps {
                 script {
                     def services = [
-                        'api-boletos-service',
+                        'api-boleto-service',
                         'aws-service',
                         'protocolo-service'
                     ]
@@ -55,7 +55,7 @@ pipeline {
                     def services = [
                         'api-gateway',
                         'eureka-naming-server',
-                        'api-boletos-service',
+                        'api-boleto-service',
                         'aws-service',
                         'protocolo-service'
                     ]
@@ -99,37 +99,37 @@ pipeline {
             }
         }
 
-        stage('Remover containers e imagens antigas') {
-            steps {
-                script {
-                    def services = [
-                        'api-gateway',
-                        'eureka-naming-server',
-                        'api-boletos-service',
-                        'aws-service',
-                        'protocolo-service'
-                    ]
+        // stage('Remover containers e imagens antigas') {
+        //     steps {
+        //         script {
+        //             def services = [
+        //                 'api-gateway',
+        //                 'eureka-naming-server',
+        //                 'api-boletos-service',
+        //                 'aws-service',
+        //                 'protocolo-service'
+        //             ]
 
-                    // Tira a stack do ar
-                    sh 'docker compose down || true'
+        //             // Tira a stack do ar
+        //             sh 'docker compose down || true'
 
-                    // Remove imagens locais com tag "latest"
-                    for (service in services) {
-                        def image = "${REGISTRY}/${service}:latest"
-                        sh "docker rmi -f ${image} || true"
-                    }
-                }
-            }
-        }
+        //             // Remove imagens locais com tag "latest"
+        //             for (service in services) {
+        //                 def image = "${REGISTRY}/${service}:latest"
+        //                 sh "docker rmi -f ${image} || true"
+        //             }
+        //         }
+        //     }
+        // }
 
-        stage('Subindo nova stack com docker-compose') {
-            steps {
-                script {
-                    // Aqui você vai configurar seu docker-compose.yml com as versões desejadas
-                    sh 'docker compose up -d'
-                }
-            }
-        }
+        // stage('Subindo nova stack com docker-compose') {
+        //     steps {
+        //         script {
+        //             // Aqui você vai configurar seu docker-compose.yml com as versões desejadas
+        //             sh 'docker compose up -d'
+        //         }
+        //     }
+        // }
     }
 
     post {
