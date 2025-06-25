@@ -45,6 +45,19 @@ pipeline {
                 }
             }
         }
+        stage('Undeploy') {
+            steps {
+                script {
+                    def result = sh(script: "docker ps -a --format '{{.Names}}' | grep -w '${SERVICE}' || true", returnStdout: true).trim()
+                    if (result) {
+                        sh 'docker-compose -f config-server/docker-compose.yml down'
+                        echo "Serviço ${SERVICE} removido com sucesso."
+                    } else {
+                        echo "Nenhum serviço ${SERVICE} em execução para remover."
+                    }
+                }
+            }
+        }
         stage('Deploy') {
             steps {
                 sh 'docker-compose -f config-server/docker-compose.yml up -d --remove-orphans'
