@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>br.com.consultdg</groupId>
 	<artifactId>protocolo-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>protocolo-service</name>
 	<description>Serviço responsável pelo gerenciamento de estados de protocolo</description>
 	<url/>

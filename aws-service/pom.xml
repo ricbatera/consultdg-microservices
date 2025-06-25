@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>br.com.conultdg</groupId>
 	<artifactId>aws-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>aws-service</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
