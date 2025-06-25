@@ -1,12 +1,19 @@
 version: '3.8'
+
 services:
   config-server:
     image: ricardo1782/config-server:latest
     container_name: config-server
     ports:
       - "8888:8888"
+    environment:
+      - TZ=America/Bahia
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     networks:
       - consultDg-network
+
 networks:
   consultDg-network:
     external: true
