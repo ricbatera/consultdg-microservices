@@ -39,6 +39,7 @@ build/
 .settings/
 
 /api-service/target/
+/api-service/.mvn/
 /api-service/.classpath
 /api-service/.project
 /api-service/.settings/
@@ -58,3 +59,10 @@ build/
 /frontend-de-testes-boletos/node_modules/
 /eureka-naming-server/target/
 /eureka-naming-server/.classpath
+/chatgpt-service/target/
+/chatgpt-service/.classpath
+/chatgpt-service-util/.mvn/
+/chatgpt-service-util/.settings/
+/chatgpt-service-util/.classpath
+/chatgpt-service-util/.project 
+/chatgpt-service-util/factorypath
