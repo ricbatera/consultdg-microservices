@@ -112,6 +112,11 @@
 			<version>1.0.0</version>
 			<!-- <scope>compile</scope> -->
 		</dependency>
+		<dependency>
+			<groupId>br.com.consultdg</groupId>
+			<artifactId>database-mysql-service</artifactId>
+			<version>1.0.4</version>
+		</dependency>
 	</dependencies>
 
 	<build>
