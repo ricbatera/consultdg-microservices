@@ -7,6 +7,8 @@ import br.com.consultdg.database_mysql_service.model.Protocolo;
 import br.com.consultdg.database_mysql_service.repository.ProtocoloRepository;
 import br.com.consultdg.protocolo_service_util.dto.ProtocoloDto;
 import br.com.consultdg.protocolo_service_util.dto.response.NovoProtocoloResponse;
+import br.com.consultdg.protocolo_service_util.enums.StatusProtocolo;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +30,9 @@ public class ProtocoloController {
         
         Protocolo entityToSave = new Protocolo();
         BeanUtils.copyProperties(entity, entityToSave);
+        if (entity.getStatusProtocolo() != null) {
+            entityToSave.setStatusProtocolo(entity.getStatusProtocolo());
+        }
         
         var protocolo = protocoloRepository.save(entityToSave);
         return new NovoProtocoloResponse(protocolo.getId(), protocolo.getNumeroProtocolo());

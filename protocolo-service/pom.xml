@@ -117,7 +117,7 @@
 		<dependency>
 			<groupId>br.com.consultdg</groupId>
 			<artifactId>database-mysql-service</artifactId>
-			<version>1.0.3</version>
+			<version>1.0.4</version>
 		</dependency>
 	</dependencies>
 
