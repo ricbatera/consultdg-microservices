@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import br.com.consultdg.database_mysql_service.enums.TipoBoleto;
+import br.com.consultdg.database_mysql_service.model.Protocolo;
 
 @Entity
 public class Boleto {
@@ -42,15 +43,19 @@ public class Boleto {
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
     @Lob
-    @Column
+    @Column(columnDefinition = "LONGTEXT")
     private String arquivoPdfBase64;
 
     @Lob
-    @Column
+    @Column(columnDefinition = "LONGTEXT")
     private String arquivoTxtBase64;
 
     @OneToMany(mappedBy = "boleto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemBoleto> itens;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "protocolo_id")
+    private Protocolo protocolo;
 
     // Getters e Setters
     public Long getId() { return id; }
@@ -91,4 +96,7 @@ public class Boleto {
 
     public List<ItemBoleto> getItens() { return itens; }
     public void setItens(List<ItemBoleto> itens) { this.itens = itens; }
+
+    public Protocolo getProtocolo() { return protocolo; }
+    public void setProtocolo(Protocolo protocolo) { this.protocolo = protocolo; }
 }
