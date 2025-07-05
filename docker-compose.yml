@@ -1,0 +1,133 @@
+version: '3.8'
+services:
+  naming-server:
+    image: ricardo1782/eureka-naming-server:latest
+    container_name: naming-service-eureka
+    ports:
+      - "8761:8761"
+    depends_on:
+      zipkin:
+        condition: service_started
+        # condition: service_completed_successfully
+    networks:
+      - consultDg-network
+  zipkin:
+    image: openzipkin/zipkin:3.5.1 
+    container_name: zipkin3.5.1
+    ports:
+      - "9411:9411"
+    networks:
+      - consultDg-network
+  api-gateway:
+    image: ricardo1782/api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "8765:8765"
+    depends_on:
+      - naming-server
+      - zipkin
+    environment:
+      - SPRING.ZIPKIN.BASEURL=http://zipkin:9411/
+      - EUREKA.CLIENT.SERVICEURL.DEFAULTZONE=http://naming-server:8761/eureka/
+    networks:
+      - consultDg-network
+  cambio-service:
+    image: ricardo1782/cambio-service:latest
+    container_name: cambio-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      cambio-db:
+        condition: service_healthy
+      naming-server:
+        condition: service_started
+      zipkin:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://cambio-db:3308/cambio_service?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: docker
+      SPRING_DATASOURCE_PASSWORD: pass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_URL: jdbc:mysql://cambio-db:3308/cambio_service?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_FLYWAY_USER: docker
+      SPRING_FLYWAY_PASSWORD: pass
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://naming-server:8761/eureka/
+    networks:
+      - consultDg-network
+  cambio-db:
+    image: mysql:8.0    
+    container_name: cambio-db    
+    environment:
+      TZ: America/Sao_Paulo
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_DATABASE: cambio_service
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: pass
+      MYSQL_TCP_PORT: 3308
+    ports:
+      - "3308:3308"
+    networks:
+      - consultDg-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  book-db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      TZ: America/Sao_Paulo
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_DATABASE: book_service
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: pass
+      MYSQL_TCP_PORT: 3309
+    container_name: book-db
+    ports:
+      - "3309:3309"
+    networks:
+      - consultDg-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  book-service:
+    image: ricardo1782/book-service:latest
+    container_name: book-service
+    restart: unless-stopped
+    ports:
+      - "8100:8100"
+    depends_on:
+      book-db:
+        condition: service_healthy
+      naming-server:
+        condition: service_started
+      zipkin:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://book-db:3309/book_service?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: docker
+      SPRING_DATASOURCE_PASSWORD: pass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_URL: jdbc:mysql://book-db:3309/book_service?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_FLYWAY_USER: docker
+      SPRING_FLYWAY_PASSWORD: pass
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://naming-server:8761/eureka/
+    networks:
+      - consultDg-network
+networks:
+  consultDg-network:
+    driver: bridge

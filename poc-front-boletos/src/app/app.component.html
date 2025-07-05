@@ -1,0 +1,70 @@
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->
+<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
+<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * Delete the template below * * * * * * * * * -->
+<!-- * * * * * * * to get started with your project! * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
+<style>
+  body, .main {
+    background: #f7f7fa;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", Arial, sans-serif;
+  }
+  .container {
+    max-width: 600px;
+    margin: 2rem auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 16px 0 rgba(0,0,0,0.08);
+    padding: 2rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .section-title {
+    font-size: 1.4rem;
+    color: #7702FF;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  @media (max-width: 700px) {
+    .container { padding: 1rem; }
+  }
+</style>
+
+<main class="main">
+  <div class="container">
+    <section>
+      <div class="section-title">Testar conexão com API</div>
+      <button (click)="chamarHello()" style="min-width:120px;">Chamar API Hello</button>
+      <div *ngIf="helloMsg" style="margin-top:0.5rem; color: #007bff; font-weight: 500;">{{ helloMsg }}</div>
+    </section>
+    <section>
+      <app-upload-pdf></app-upload-pdf>
+    </section>
+    <section>
+      <div class="section-title">Download de PDF de Boleto</div>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="number" min="1" [(ngModel)]="downloadId" placeholder="ID do boleto" style="padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc; width: 160px;" />
+        <button (click)="baixarPdf()" style="min-width:120px;">Download PDF</button>
+      </div>
+      <div *ngIf="downloadError" style="color: #d32f2f; margin-top: 0.5rem;">{{ downloadError }}</div>
+    </section>
+  </div>
+</main>
+
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * The content above * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * * -->
+<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * End of Placeholder  * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
+
+<router-outlet />

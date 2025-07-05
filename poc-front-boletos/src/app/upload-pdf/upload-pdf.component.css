@@ -1,0 +1,50 @@
+/* Estilo para o componente de upload de PDF */
+.upload-container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.08);
+  padding: 2rem 2.5rem 2rem 2.5rem;
+  margin: 2rem auto;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+.upload-container h2 {
+  color: #7702FF;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.upload-container input[type="file"] {
+  margin-bottom: 1rem;
+}
+.upload-container textarea {
+  width: 100%;
+  min-height: 60px;
+  font-size: 0.9rem;
+  background: #f7f7fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 0.5rem;
+  resize: vertical;
+  margin-bottom: 1rem;
+}
+.upload-container canvas {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #f7f7fa;
+  margin-top: 0.5rem;
+  box-shadow: 0 1px 4px 0 rgba(0,0,0,0.06);
+}
+.upload-container h3 {
+  font-size: 1.1rem;
+  color: #333;
+  margin: 0.5rem 0 0.2rem 0;
+}
+@media (max-width: 600px) {
+  .upload-container {
+    padding: 1rem;
+    max-width: 98vw;
+  }
+}

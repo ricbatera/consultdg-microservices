@@ -66,3 +66,6 @@ build/
 /chatgpt-service-util/.classpath
 /chatgpt-service-util/.project 
 /chatgpt-service-util/factorypath
+
+/poc-front-boletos/node_modules/
+/poc-front-boletos/dist/

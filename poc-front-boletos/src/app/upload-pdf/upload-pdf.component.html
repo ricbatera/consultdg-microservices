@@ -1,0 +1,23 @@
+<p>upload-pdf works!</p>
+<div class="upload-container">
+  <h2>Upload de PDF</h2>
+  <input type="file" accept="application/pdf" (change)="onFileSelected($event)" />
+  <button (click)="chamarHello()" style="margin-bottom:1rem;min-width:120px;">Chamar API Hello</button>
+  <div *ngIf="helloMsg" style="margin-bottom:1rem; color: #007bff; font-weight: 500;">{{ helloMsg }}</div>
+  <button (click)="buscarUrlS3()" [disabled]="!nomeArquivo || buscandoUrl" style="margin-bottom:1rem;min-width:180px;">
+    {{ buscandoUrl ? 'Buscando URL S3...' : 'Obter URL pré-assinada S3' }}
+  </button>
+  <div *ngIf="urlS3" style="margin-bottom:1rem; color: #007bff; font-weight: 500; word-break: break-all;">
+    {{ urlS3 }}
+  </div>
+  <div *ngIf="base64Pdf">
+    <h3>Base64 gerado:</h3>
+    <textarea [value]="base64Pdf" rows="4" cols="60" readonly></textarea>
+    <h3>Miniatura do PDF:</h3>
+    <canvas #pdfCanvas></canvas>
+    <button (click)="enviarPdf()" [disabled]="enviando" style="margin-top:1rem;min-width:120px;">
+      {{ enviando ? 'Enviando...' : 'Enviar PDF' }}
+    </button>
+    <div *ngIf="mensagem" style="margin-top:0.5rem; color: #7702FF; font-weight: 500;">{{ mensagem }}</div>
+  </div>
+</div>
