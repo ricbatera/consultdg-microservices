@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.http.ResponseEntity;
 
+import br.com.consultdg.api_boleto_service.producer.BoletoProducer;
+
 @Tag(name = "Boletos", description = "API para gerenciamento de requisições dos Sistema de Boletos")
 @RestController
 @RequestMapping("/api/boletos")
@@ -47,6 +49,9 @@ public class AppBoletoController {
 
 	@Autowired
 	private DownloadPdfService downloadPdfService;
+
+	@Autowired
+	private BoletoProducer boletoProducer;
 
 	@GetMapping("get-url-to-upload-s3")
 	@Operation(summary = "Obtém a URL para upload de arquivos S3", description = "Gera uma URL pré-assinada para upload de arquivos no S3.")
@@ -72,6 +77,10 @@ public class AppBoletoController {
 		var res = registraProtocolo(novoBoletoRequest.getNomeArquivo());
 		processaBoletoService.processar(res, novoBoletoRequest);
 		registraProtocoloService.atualizaProtocolo(res.id(), StatusProtocolo.ABERTO, null);
+
+		// Envia o id do protocolo para o RabbitMQ
+		boletoProducer.sendProtocoloId(res.id());
+
 		return ResponseEntity.ok(new ResponseDefault("Boleto recebido para processamento: " + novoBoletoRequest.getNomeArquivo()));
 	}
 
