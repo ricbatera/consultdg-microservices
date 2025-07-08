@@ -51,6 +51,9 @@ public class AppBoletoController {
 	private DownloadPdfService downloadPdfService;
 
 	@Autowired
+	private br.com.consultdg.api_boleto_service.service.DownloadImagemService downloadImagemService;
+
+	@Autowired
 	private BoletoProducer boletoProducer;
 
 	@GetMapping("get-url-to-upload-s3")
@@ -108,6 +111,22 @@ public class AppBoletoController {
 				return ResponseEntity.ok().headers(headers).body(pdfBytes);
 			})
 			.orElse(ResponseEntity.notFound().<byte[]>build());
+	}
+
+	@GetMapping("/download-imagem-boleto")
+	@Operation(summary = "Download das imagens do boleto", description = "Realiza o download das imagens do boleto pelo ID do boleto. Retorna uma lista de imagens base64, uma para cada página.")
+	public ResponseEntity<?> downloadImagensBoleto(@RequestParam Long id) {
+		var imagens = downloadImagemService.buscarImagensPorBoletoId(id);
+		if (imagens == null || imagens.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		// Retorna lista de objetos com base64, formato e número da página
+		var response = imagens.stream().map(img -> new java.util.HashMap<String, Object>() {{
+			put("imagemBase64", img.getImagemBase64());
+			put("formatoImagem", img.getFormatoImagem());
+			put("numeroPagina", img.getNumeroPagina());
+		}}).toList();
+		return ResponseEntity.ok(response);
 	}
 }
 

@@ -51,6 +51,14 @@ export class BoletoApiService {
     window.URL.revokeObjectURL(url);
   }
 
+  async downloadImagensBoleto(id: number): Promise<Array<{ imagemBase64: string, formatoImagem: string, numeroPagina: number }>> {
+    const response = await fetch(`${this.apiUrl}/download-imagem-boleto?id=${id}`);
+    if (!response.ok) {
+      throw new Error('Imagens não encontradas ou erro no download.');
+    }
+    return response.json();
+  }
+
   private getFileNameFromResponse(response: Response): string | null {
     const disposition = response.headers.get('Content-Disposition');
     if (disposition) {

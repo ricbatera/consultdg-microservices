@@ -1,0 +1,46 @@
+/* Modal de imagem ampliada */
+.modal-imagem {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-imagem-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.7);
+  z-index: 1;
+}
+.modal-imagem-img {
+  max-width: 90vw;
+  max-height: 80vh;
+  border-radius: 10px;
+  box-shadow: 0 4px 32px 0 rgba(0,0,0,0.25);
+  z-index: 2;
+  background: #fff;
+  padding: 8px;
+}
+.modal-imagem-fechar {
+  position: absolute;
+  top: 32px;
+  right: 48px;
+  z-index: 3;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 2.5rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: color 0.2s;
+}
+.modal-imagem-fechar:hover {
+  color: #ff4081;
+}

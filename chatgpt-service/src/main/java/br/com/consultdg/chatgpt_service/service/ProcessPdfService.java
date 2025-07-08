@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import br.com.consultdg.chatgpt_service.dto.BoletoDTO;
 import br.com.consultdg.database_mysql_service.model.boletos.Boleto;
 import br.com.consultdg.database_mysql_service.repository.boletos.BoletoRepository;
+import br.com.consultdg.database_mysql_service.model.boletos.ImagemBase64;
+import br.com.consultdg.database_mysql_service.repository.ImagemBase64Repository;
 import br.com.consultdg.protocolo_service_util.dto.boletos.BoletoBase64Request;
 
 import javax.imageio.ImageIO;
@@ -28,11 +30,15 @@ public class ProcessPdfService {
     public static final String FORMAT_PNG = "png";
     public static final String FORMAT_DEFAULT = FORMAT_PNG; // Troque aqui para FORMAT_JPEG ou FORMAT_PNG
 
+
     @Autowired
     private ChatGptBoletoService chatGptBoletoService;
 
     @Autowired
     private BoletoRepository boletoRepository;
+
+    @Autowired
+    private ImagemBase64Repository imagemBase64Repository;
 
     @Value("${path.base}")
     private String basePath;
@@ -101,12 +107,31 @@ public class ProcessPdfService {
     }
 
     private void processaGpt(List<String> imagensBase64, BoletoBase64Request request) {
-        for (int i = 0; i < imagensBase64.size(); i++) {
+        // Recupera o boleto pelo protocolo_id
+        Boleto boleto = boletoRepository.findByProtocoloId(request.idProtocolo())
+                .orElseThrow(() -> new RuntimeException("Boleto não encontrado para o protocolo: " + request.idProtocolo()));
 
-            // Chama a API do ChatGPT para cada base64
+        for (int i = 0; i < imagensBase64.size(); i++) {
+            String imagemBase64 = imagensBase64.get(i);
+            String formato = "png";
+            if (imagemBase64.startsWith("data:image/")) {
+                int idx = imagemBase64.indexOf(';');
+                if (idx > 0) {
+                    String mime = imagemBase64.substring(11, idx);
+                    formato = mime;
+                }
+            }
+            // Remove o prefixo data:image/...;base64,
+            String base64SemPrefixo = imagemBase64.contains(",") ? imagemBase64.substring(imagemBase64.indexOf(",") + 1) : imagemBase64;
+
+            ImagemBase64 imagem = new ImagemBase64(base64SemPrefixo, formato, i + 1, boleto);
+            imagemBase64Repository.save(imagem);
+        }
+
+        // Chama a API do ChatGPT para cada base64 (mantém lógica original)
+        for (int i = 0; i < imagensBase64.size(); i++) {
             List<BoletoDTO> boletos = chatGptBoletoService.analisarImagens(List.of(imagensBase64.get(i)));
             for (BoletoDTO dto : boletos) {
-                // Converte DTO para Entity
                 Boleto entity = converterParaEntity(dto, request);
                 boletoRepository.save(entity);
                 System.out.println("Boleto persistido: " + entity.getNumeroDocumento());
@@ -117,8 +142,6 @@ public class ProcessPdfService {
     private Boleto converterParaEntity(BoletoDTO dto, BoletoBase64Request request) {
         Boleto entity = boletoRepository.findByProtocoloId(request.idProtocolo())
                 .orElse(new Boleto()); // Busca ou cria um novo objeto Boleto
-        //entity.setId(dto.getId());
-        //entity.setNomeArquivo(dto.getNome_arquivo());
         entity.setCodigoBarras(dto.getCodigo_barras());
         // Conversão de data_vencimento (String) para LocalDate
         if (dto.getData_vencimento() != null && !dto.getData_vencimento().isEmpty()) {
@@ -148,8 +171,6 @@ public class ProcessPdfService {
                 entity.setDataCriacao(java.time.LocalDateTime.now());
             }
         }
-        //entity.setArquivoPdfBase64(dto.getArquivo_pdf_base64());
-        //entity.setArquivoTxtBase64(dto.getArquivo_txt_base64());
         entity.setItensValidados(dto.getItens_validados());
         // Conversão dos itens (corrigido para evitar erro de orphanRemoval)
         if (dto.getItens() != null) {
