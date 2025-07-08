@@ -1,10 +1,10 @@
-package br.com.consultdg.processa_boleto_service.service;
+package br.com.consultdg.chatgpt_service.service;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import br.com.consultdg.processa_boleto_service.proxy.ProtocoloServiceProxy;
+import br.com.consultdg.chatgpt_service.proxy.ProtocoloServiceProxy;
 import br.com.consultdg.protocolo_service_util.dto.ProtocoloDto;
 import br.com.consultdg.protocolo_service_util.dto.boletos.EventosProtocoloBoletoRequest;
 import br.com.consultdg.protocolo_service_util.dto.response.NovoProtocoloResponse;
@@ -17,8 +17,8 @@ public class RegistraProtocoloService {
 
     @Autowired
     private ProtocoloServiceProxy protocoloServiceProxy;
-    
-    private static final String SISTEMA_ORIGEM = "PROCESSA_BOLETO_SERVICE";
+
+    private static final String SISTEMA_ORIGEM = "CHATGPT_SERVICE";
 
     public NovoProtocoloResponse registraProtocolo() {
         // Cria o objeto de requisição para o protocolo

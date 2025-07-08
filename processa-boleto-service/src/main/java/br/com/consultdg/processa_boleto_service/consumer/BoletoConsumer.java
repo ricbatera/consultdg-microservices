@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import br.com.consultdg.database_mysql_service.repository.ProtocoloRepository;
 import br.com.consultdg.processa_boleto_service.service.ProcessaBoletoService;
 import br.com.consultdg.processa_boleto_service.service.RegistraProtocoloService;
-import br.com.consultdg.protocolo_service_util.dto.response.NovoProtocoloResponse;
 import br.com.consultdg.protocolo_service_util.enums.StatusProtocolo;
 import br.com.consultdg.protocolo_service_util.enums.boletos.SubStatusEventosBoleto;
 import br.com.consultdg.protocolo_service_util.enums.boletos.TipoEvento;
@@ -37,7 +36,7 @@ public class BoletoConsumer {
     public void receiveProtocoloId(Long protocoloId) {
         logger.info("[RabbitMQ] Protocolo recebido para processamento: {}", protocoloId);
         registraProtocoloService.atualizaProtocolo(protocoloId, StatusProtocolo.EM_ANDAMENTO, null);
-        registraProtocoloService.registraEventoProtocolo(null, protocoloId, SubStatusEventosBoleto.EM_ANDAMENTO, TipoEvento.PROCESSA_BOLETO_CRIADO);
+        registraProtocoloService.registraEventoProtocolo(null, protocoloId, SubStatusEventosBoleto.EM_ANDAMENTO, TipoEvento.PROCESSA_BOLETO_PROCESSANDO);
         var protocolo = protocoloRepository.findById(protocoloId)
                 .orElseThrow(() -> new RuntimeException("Protocolo não encontrado com ID: " + protocoloId));
         processaBoletoService.processa(protocolo);

@@ -15,7 +15,21 @@ public enum TipoEvento {
     PROCESSA_BOLETO_ERRO(12, "PROCESSA_BOLETO_ERRO", "Erro ao processar boleto"),
     PROCESSA_BOLETO_ENVIADO_FILA(13, "PROCESSA_BOLETO_ENVIADO_FILA", "Boleto enviado para a fila de processamento"),
     PROCESSA_BOLETO_PROCESSANDO(14, "PROCESSA_BOLETO_PROCESSANDO", "Boleto em processamento"),
-    PROCESSA_BOELETO_FINALIZADO(15, "PROCESSA_BOLETO_FINALIZADO", "Boleto processado e finalizado");
+    PROCESSA_BOELETO_FINALIZADO(15, "PROCESSA_BOLETO_FINALIZADO", "Boleto processado e finalizado"),
+    PROCESSA_BOLETO_ENVIO_CHATGPT(16, "PROCESSA_BOLETO_ENVIO_CHATGPT", "Boleto enviado para o ChatGPT para processamento"),
+    PROCESSA_BOLETO_RECEBIDO_CHATGPT(17, "PROCESSA_BOLETO_RECEBIDO_CHATGPT", "Resposta do ChatGPT recebida para o boleto"),
+    PROCESSA_BOLETO_EM_ANDAMENTO_CHATGPT(18, "PROCESSA_BOLETO_EM_ANDAMENTO_CHATGPT", "Processamento do boleto em andamento com ChatGPT"),
+    PROCESSA_BOLETO_FINALIZADO_CHATGPT(19, "PROCESSA_BOLETO_FINALIZADO_CHATGPT", "Boleto processado e finalizado com ChatGPT"),
+    PROCESSA_BOLETO_ERRO_CHATGPT(20, "PROCESSA_BOLETO_ERRO_CHATGPT", "Erro ao processar boleto com ChatGPT"),
+    TESSERACT_INICIADO(21, "TESSERACT_INICIADO", "Início do processamento com Tesseract"),
+    TESSERACT_BUSCANDO_CODIGO_DE_BARRAS(22, "TESSERACT_BUSCANDO_CODIGO_DE_BARRAS", "Buscando código de barras com Tesseract"),
+    TESSERACT_BUSCANDO_DATA_VENCIMENTO(23, "TESSERACT_BUSCANDO_DATA_VENCIMENTO", "Buscando data de vencimento com Tesseract"),
+    TESSERACT_BUSCANDO_VALOR(24, "TESSERACT_BUSCANDO_VALOR", "Buscando valor do boleto com Tesseract"),
+    TESSERACT_BUSCANDO_ITENS(25, "TESSERACT_BUSCANDO_ITENS", "Buscando itens do boleto com Tesseract"),
+    TESSERACT_VALIDANDO_ITENS(26, "TESSERACT_VALIDANDO_ITENS", "Validando itens do boleto com Tesseract"),
+    TESSERACT_FINALIZADO(27, "TESSERACT_FINALIZADO", "Processamento com Tesseract finalizado"),
+    TESSERACT_ERRO(28, "TESSERACT_ERRO", "Erro ao processar boleto com Tesseract")
+    ;
 
     private final int indice;
     private final String nome;

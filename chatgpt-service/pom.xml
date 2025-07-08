@@ -154,6 +154,10 @@
 			<artifactId>database-mysql-service</artifactId>
 			<version>1.0.4</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

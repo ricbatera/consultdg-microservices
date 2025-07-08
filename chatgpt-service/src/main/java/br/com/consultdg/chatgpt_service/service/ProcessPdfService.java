@@ -13,6 +13,9 @@ import br.com.consultdg.database_mysql_service.repository.boletos.BoletoReposito
 import br.com.consultdg.database_mysql_service.model.boletos.ImagemBase64;
 import br.com.consultdg.database_mysql_service.repository.ImagemBase64Repository;
 import br.com.consultdg.protocolo_service_util.dto.boletos.BoletoBase64Request;
+import br.com.consultdg.protocolo_service_util.enums.StatusProtocolo;
+import br.com.consultdg.protocolo_service_util.enums.boletos.SubStatusEventosBoleto;
+import br.com.consultdg.protocolo_service_util.enums.boletos.TipoEvento;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -39,6 +42,9 @@ public class ProcessPdfService {
 
     @Autowired
     private ImagemBase64Repository imagemBase64Repository;
+
+    @Autowired
+    private RegistraProtocoloService registraProtocoloService;
 
     @Value("${path.base}")
     private String basePath;
@@ -85,6 +91,7 @@ public class ProcessPdfService {
     }
 
     public void processaPdfBase64(BoletoBase64Request entity) {
+        registraProtocoloService.registraEventoProtocolo(null,entity.idProtocolo(),SubStatusEventosBoleto.EM_ANDAMENTO,TipoEvento.PROCESSA_BOLETO_EM_ANDAMENTO_CHATGPT);
         List<String> imagesBase64 = new ArrayList<>();
         String pdfBase64 = entity.base64Boleto();
         try {
@@ -101,7 +108,10 @@ public class ProcessPdfService {
                 }
                 processaGpt(imagesBase64, entity);
             }
+        registraProtocoloService.registraEventoProtocolo(null,entity.idProtocolo(),SubStatusEventosBoleto.EM_ANDAMENTO,TipoEvento.PROCESSA_BOLETO_FINALIZADO_CHATGPT);
         } catch (Exception e) {
+            registraProtocoloService.registraEventoProtocolo(null,entity.idProtocolo(),SubStatusEventosBoleto.ERRO,TipoEvento.PROCESSA_BOLETO_ERRO_CHATGPT);
+            registraProtocoloService.atualizaProtocolo(entity.idProtocolo(),StatusProtocolo.COM_ERRO, e.getLocalizedMessage());
             throw new RuntimeException("Erro ao processar PDF base64", e);
         }
     }
