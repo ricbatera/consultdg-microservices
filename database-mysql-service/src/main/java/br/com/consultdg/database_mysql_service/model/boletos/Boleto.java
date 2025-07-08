@@ -9,45 +9,46 @@ import br.com.consultdg.database_mysql_service.enums.TipoBoleto;
 import br.com.consultdg.database_mysql_service.model.Protocolo;
 
 @Entity
+@Table(name = "boleto")
 public class Boleto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 255)
+    @Column(length = 255, name = "nome_arquivo")
     private String nomeArquivo;
 
-    @Column(length = 100)
+    @Column(length = 100, name = "codigo_barras")
     private String codigoBarras;
 
-    @Column
+    @Column(name = "data_vencimento")
     private LocalDate dataVencimento;
 
     @Column(precision = 15, scale = 2)
     private BigDecimal valor;
 
-    @Column(length = 50)
+    @Column(length = 50, name = "numero_documento")
     private String numeroDocumento;
 
-    @Column(length = 20)
+    @Column(length = 20, name = "cnpj_pagador")
     private String cnpjPagador;
 
-    @Column(length = 20)
+    @Column(length = 20, name = "cnpj_recebedor")
     private String cnpjRecebedor;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 30)
+    @Column(length = 30, name = "tipo_boleto")
     private TipoBoleto tipoBoleto;
 
-    @Column
+    @Column(name = "data_criacao")
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
     @Lob
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "LONGTEXT", name = "arquivo_pdf_base64")
     private String arquivoPdfBase64;
 
     @Lob
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "LONGTEXT", name = "arquivo_txt_base64")
     private String arquivoTxtBase64;
 
     @OneToMany(mappedBy = "boleto", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -57,7 +58,14 @@ public class Boleto {
     @JoinColumn(name = "protocolo_id")
     private Protocolo protocolo;
 
+    @Column(name = "itens_validados")
+    private Boolean itensValidados;
+    
     // Getters e Setters
+
+    public Boolean getItensValidados() { return itensValidados;}
+    public void setItensValidados(Boolean itensValidados) { this.itensValidados = itensValidados;}
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

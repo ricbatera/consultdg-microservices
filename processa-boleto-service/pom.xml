@@ -84,6 +84,21 @@
 	      <groupId>io.zipkin.brave</groupId>
 	      <artifactId>brave-instrumentation-spring-web</artifactId>	      
 	    </dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>br.com.consultdg</groupId>
+			<artifactId>protocolo-service-util</artifactId>
+			<version>1.0.0</version>
+			<!-- <scope>compile</scope> -->
+		</dependency>
+		<dependency>
+			<groupId>br.com.consultdg</groupId>
+			<artifactId>database-mysql-service</artifactId>
+			<version>1.0.4</version>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

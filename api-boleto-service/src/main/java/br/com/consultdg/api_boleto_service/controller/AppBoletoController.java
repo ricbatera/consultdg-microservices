@@ -80,6 +80,7 @@ public class AppBoletoController {
 
 		// Envia o id do protocolo para o RabbitMQ
 		boletoProducer.sendProtocoloId(res.id());
+		registraProtocoloService.registraEventoProtocolo(novoBoletoRequest.getNomeArquivo(), res.id(), SubStatusEventosBoleto.EM_ANDAMENTO, TipoEvento.PROCESSA_BOLETO_ENVIADO_FILA);
 
 		return ResponseEntity.ok(new ResponseDefault("Boleto recebido para processamento: " + novoBoletoRequest.getNomeArquivo()));
 	}
