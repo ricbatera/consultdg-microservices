@@ -70,6 +70,10 @@ build/
 /processa-boleto-service/.classpath
 /processa-boleto-service/.project
 /processa-boleto-service/.mvn/
+/tesseract-service/target/
+/tesseract-service/.classpath
+/tesseract-service/.project
+/tesseract-service/.mvn/
 
 /poc-front-boletos/node_modules/
 /poc-front-boletos/dist/
