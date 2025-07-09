@@ -49,4 +49,6 @@ public class EventosProtocoloBoleto implements Serializable {
     @Column(name = "data_hora_criacao")
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime dataHoraCriacao;
+    @Column(name = "mensagem")
+    private String mensagem;
 }

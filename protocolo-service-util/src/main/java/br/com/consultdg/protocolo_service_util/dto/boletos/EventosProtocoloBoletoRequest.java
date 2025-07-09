@@ -15,12 +15,20 @@ public class EventosProtocoloBoletoRequest {
     private SubStatusEventosBoleto subStatusEvento;
     private TipoEvento tipoEvento;
     private LocalDateTime dataHoraCriacao = LocalDateTime.now();
+    private String mensagem;
 
 
     public EventosProtocoloBoletoRequest() {}
+
     public EventosProtocoloBoletoRequest(Long idEvento, String nomeArquivo, String pathS3Atual, String pathS3Alvo,
                                          String sistemaOrigemEvento, Long idProtocolo,
                                          SubStatusEventosBoleto subStatusEvento, TipoEvento tipoEvento) {
+        this(idEvento, nomeArquivo, pathS3Atual, pathS3Alvo, sistemaOrigemEvento, idProtocolo, subStatusEvento, tipoEvento, null);
+    }
+
+    public EventosProtocoloBoletoRequest(Long idEvento, String nomeArquivo, String pathS3Atual, String pathS3Alvo,
+                                         String sistemaOrigemEvento, Long idProtocolo,
+                                         SubStatusEventosBoleto subStatusEvento, TipoEvento tipoEvento, String mensagem) {
         this.idEvento = idEvento;
         this.nomeArquivo = nomeArquivo;
         this.pathS3Atual = pathS3Atual;
@@ -30,6 +38,7 @@ public class EventosProtocoloBoletoRequest {
         this.subStatusEvento = subStatusEvento;
         this.tipoEvento = tipoEvento;
         this.dataHoraCriacao = LocalDateTime.now();
+        this.mensagem = mensagem;
     }
     public LocalDateTime getDataHoraCriacao() {
         return dataHoraCriacao;
@@ -82,6 +91,14 @@ public class EventosProtocoloBoletoRequest {
     }
     public void setIdProtocolo(Long idProtocolo) {
         this.idProtocolo = idProtocolo;
+    }
+
+    public String getMensagem() {
+        return mensagem;
+    }
+
+    public void setMensagem(String mensagem) {
+        this.mensagem = mensagem;
     }
 
 }

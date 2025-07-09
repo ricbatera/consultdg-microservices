@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.consultdg.database_mysql_service.model.Protocolo;
 import br.com.consultdg.database_mysql_service.repository.boletos.BoletoRepository;
+import br.com.consultdg.processa_boleto_service.producer.TesseractProducer;
 import br.com.consultdg.processa_boleto_service.proxy.ChatGptServiceProxy;
 import br.com.consultdg.protocolo_service_util.dto.boletos.BoletoBase64Request;
 import br.com.consultdg.protocolo_service_util.enums.StatusProtocolo;
@@ -27,11 +28,17 @@ public class ProcessaBoletoService {
     @Autowired
     private RegistraProtocoloService registraProtocoloService;
 
+    @Autowired
+    private TesseractProducer tesseractProducer;
+
     public void processa(Protocolo protocolo) {
-        var boleto = boletoRepository.findById(protocolo.getId())
+        var boleto = boletoRepository.findByProtocoloId(protocolo.getId())
                 .orElseThrow(() -> new RuntimeException("Boleto não encontrado: " + protocolo.getId()));
         try {
             registraProtocoloService.registraEventoProtocolo(null,protocolo.getId(),SubStatusEventosBoleto.EM_ANDAMENTO,TipoEvento.PROCESSA_BOLETO_ENVIO_CHATGPT);
+             // envia para a fila do serviço do Tesseract para ler o PDF do boleto - Assincrono
+            tesseractProducer.sendProtocoloId(protocolo.getId());
+            // chama o serviço do ChatGPT para processar o boleto - Sincrono
             chatGptBoletoService.searchBoleto(new BoletoBase64Request(
                     boleto.getArquivoPdfBase64(),
                     protocolo.getId(),
