@@ -15,6 +15,9 @@ public class Boleto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Integer version;
+
     @Column(length = 255, name = "nome_arquivo")
     private String nomeArquivo;
 
@@ -65,9 +68,16 @@ public class Boleto {
     @Column(columnDefinition = "LONGTEXT", name = "json_chatgpt")
     private String json;
 
+    @Lob
+    @Column(columnDefinition = "LONGTEXT", name = "string_extraida_tesseract")
+    private String stringExtraidaTesseract;
+
 
     public String getJson() { return json; }
     public void setJson(String json) { this.json = json; }
+
+    public String getStringExtraidaTesseract() { return stringExtraidaTesseract; }
+    public void setStringExtraidaTesseract(String stringExtraidaTesseract) { this.stringExtraidaTesseract = stringExtraidaTesseract; }
 
     public Boolean getItensValidados() { return itensValidados;}
     public void setItensValidados(Boolean itensValidados) { this.itensValidados = itensValidados;}

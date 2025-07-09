@@ -28,7 +28,9 @@ public enum TipoEvento {
     TESSERACT_BUSCANDO_ITENS(25, "TESSERACT_BUSCANDO_ITENS", "Buscando itens do boleto com Tesseract"),
     TESSERACT_VALIDANDO_ITENS(26, "TESSERACT_VALIDANDO_ITENS", "Validando itens do boleto com Tesseract"),
     TESSERACT_FINALIZADO(27, "TESSERACT_FINALIZADO", "Processamento com Tesseract finalizado"),
-    TESSERACT_ERRO(28, "TESSERACT_ERRO", "Erro ao processar boleto com Tesseract")
+    TESSERACT_ERRO(28, "TESSERACT_ERRO", "Erro ao processar boleto com Tesseract"),
+    TESSERACT_EXTRAINDO_TEXTO(29, "TESSERACT_EXTRAINDO_TEXTO", "Extraindo texto do boleto com Tesseract"),
+    TESSERACT_SUCESO_TEXTO_EXTRAIDO(30, "TESSERACT_SUCESO_TEXTO_EXTRAIDO", "Texto extraído com sucesso do boleto com Tesseract")
     ;
 
     private final int indice;

@@ -151,9 +151,26 @@ public class ProcessPdfService {
         for (int i = 0; i < imagensBase64.size(); i++) {
             List<BoletoDTO> boletos = chatGptBoletoService.analisarImagens(List.of(imagensBase64.get(i)));
             for (BoletoDTO dto : boletos) {
-                Boleto entity = converterParaEntity(dto, request);
-                boletoRepository.save(entity);
-                logger.info("Boleto persistido: {}", entity.getNomeArquivo());
+                boolean salvo = false;
+                int tentativas = 0;
+                while (!salvo && tentativas < 3) {
+                    try {
+                        Boleto entity = converterParaEntity(dto, request);
+                        boletoRepository.save(entity);
+                        logger.info("Boleto persistido: {}", entity.getNomeArquivo());
+                        salvo = true;
+                    } catch (org.springframework.dao.OptimisticLockingFailureException | jakarta.persistence.OptimisticLockException e) {
+                        tentativas++;
+                        logger.warn("Concorrência detectada ao salvar boleto. Tentando novamente (tentativa {}/3)...", tentativas);
+                        // Recarrega o registro atualizado do banco
+                        // Nada a fazer aqui, pois converterParaEntity já busca o registro atualizado
+                        // O método converterParaEntity já busca o registro atualizado
+                        if (tentativas >= 3) {
+                            logger.error("Falha ao salvar boleto após 3 tentativas devido a concorrência.", e);
+                            throw e;
+                        }
+                    }
+                }
             }
         }
     }
