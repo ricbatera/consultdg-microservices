@@ -19,6 +19,10 @@ public class BoletoDTO {
     private List<ItemDTO> itens;
     private Boolean itens_validados;
     private Long protocolo_id;
+    private String json;
+
+    public String getJson() { return json; }
+    public void setJson(String json) { this.json = json; }
 
     // Getters e setters
     public Long getId() { return id; }

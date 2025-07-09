@@ -60,8 +60,14 @@ public class Boleto {
 
     @Column(name = "itens_validados")
     private Boolean itensValidados;
-    
-    // Getters e Setters
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT", name = "json_chatgpt")
+    private String json;
+
+
+    public String getJson() { return json; }
+    public void setJson(String json) { this.json = json; }
 
     public Boolean getItensValidados() { return itensValidados;}
     public void setItensValidados(Boolean itensValidados) { this.itensValidados = itensValidados;}

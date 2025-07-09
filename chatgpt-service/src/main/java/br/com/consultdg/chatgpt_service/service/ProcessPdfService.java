@@ -3,6 +3,8 @@ package br.com.consultdg.chatgpt_service.service;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProcessPdfService {
+
+    Logger logger = LoggerFactory.getLogger(ProcessPdfService.class);
 
     public static final String FORMAT_JPEG = "jpeg";
     public static final String FORMAT_PNG = "png";
@@ -55,6 +59,7 @@ public class ProcessPdfService {
     }
 
     public List<String> convertAllPdfsToBase64Images() {
+        logger.info("Convertendo todos os PDFs no diretório: {}", basePath);
         File directory = new File(basePath);
         if (!directory.exists() || !directory.isDirectory()) {
             throw new RuntimeException("Diretório base não encontrado: " + basePath);
@@ -69,10 +74,12 @@ public class ProcessPdfService {
     }
 
     public List<String> convertPdfToBase64Images(File pdfFile) {
+        logger.info("Convertendo PDF para imagens base64: {}", pdfFile.getName());
         return convertPdfToBase64Images(pdfFile, FORMAT_DEFAULT);
     }
 
     public List<String> convertPdfToBase64Images(File pdfFile, String format) {
+        logger.info("Convertendo PDF para imagens base64: {} no formato {}", pdfFile.getName(), format);
         List<String> imagesBase64 = new ArrayList<>();
         try (PDDocument document = PDDocument.load(pdfFile)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
@@ -85,12 +92,14 @@ public class ProcessPdfService {
                 imagesBase64.add("data:image/" + mime + ";base64," + base64);
             }
         } catch (Exception e) {
+            logger.error("Erro ao processar PDF: {}", pdfFile.getName(), e.getMessage());
             throw new RuntimeException("Erro ao processar PDF: " + pdfFile.getName(), e);
         }
         return imagesBase64;
     }
 
     public void processaPdfBase64(BoletoBase64Request entity) {
+        logger.info("Processando PDF base64 para o protocolo: {}", entity.idProtocolo());
         registraProtocoloService.registraEventoProtocolo(null,entity.idProtocolo(),SubStatusEventosBoleto.EM_ANDAMENTO,TipoEvento.PROCESSA_BOLETO_EM_ANDAMENTO_CHATGPT);
         List<String> imagesBase64 = new ArrayList<>();
         String pdfBase64 = entity.base64Boleto();
@@ -144,7 +153,7 @@ public class ProcessPdfService {
             for (BoletoDTO dto : boletos) {
                 Boleto entity = converterParaEntity(dto, request);
                 boletoRepository.save(entity);
-                System.out.println("Boleto persistido: " + entity.getNumeroDocumento());
+                logger.info("Boleto persistido: {}", entity.getNomeArquivo());
             }
         }
     }
@@ -165,6 +174,7 @@ public class ProcessPdfService {
         entity.setNumeroDocumento(dto.getNumero_documento());
         entity.setCnpjPagador(dto.getCnpj_pagador());
         entity.setCnpjRecebedor(dto.getCnpj_beneficiario());
+        entity.setJson(dto.getJson());
         // Conversão de tipo_boleto (String) para Enum
         if (dto.getTipo_boleto() != null) {
             try {
