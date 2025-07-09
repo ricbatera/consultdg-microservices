@@ -16,6 +16,7 @@ import br.com.consultdg.database_mysql_service.model.boletos.Boleto;
 import br.com.consultdg.database_mysql_service.repository.boletos.BoletoRepository;
 import br.com.consultdg.protocolo_service_util.enums.boletos.SubStatusEventosBoleto;
 import br.com.consultdg.protocolo_service_util.enums.boletos.TipoEvento;
+import br.com.consultdg.tesseract_service.producer.TesseractProducer;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 
@@ -31,6 +32,9 @@ public class TesseractService {
     private BoletoRepository boletoRepository;
     @Autowired
     private RegistraProtocoloService registraProtocoloService;
+
+    @Autowired
+    private TesseractProducer tesseractProducer;
 
     public void processarBoleto(Long protocoloId) {
         logger.info("[TesseractService] Iniciando processamento do boleto associado ao protocolo: {}", protocoloId);
@@ -62,7 +66,9 @@ public class TesseractService {
 
                 // Atualiza o boleto com o texto extraído
                 boleto.setStringExtraidaTesseract(extractedText.toString());
+                boleto.setTesseractFinalizado(true);
                 boletoRepository.save(boleto);
+                tesseractProducer.sendProtocoloId(protocoloId);
                 salvo = true;
             } catch (org.springframework.dao.OptimisticLockingFailureException | jakarta.persistence.OptimisticLockException e) {
                 tentativas++;

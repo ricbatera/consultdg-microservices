@@ -17,25 +17,41 @@ public class RegistraProtocoloService {
 
     @Autowired
     private ProtocoloServiceProxy protocoloServiceProxy;
-    
+
     private static final String SISTEMA_ORIGEM = "PROCESSA_BOLETO_SERVICE";
 
     public NovoProtocoloResponse registraProtocolo() {
         // Cria o objeto de requisição para o protocolo
-        var protocoloRequest = new ProtocoloDto(SISTEMA_ORIGEM);        
+        var protocoloRequest = new ProtocoloDto(SISTEMA_ORIGEM);
         // Chama o serviço de protocolo para criar um novo protocolo
         return protocoloServiceProxy.newProtocol(protocoloRequest);
     }
 
-    public void registraEventoProtocolo(String fileName, Long protocolo_id, SubStatusEventosBoleto subStatusEvento, TipoEvento tipoEvento){                
-        
+    public void registraEventoProtocolo(String fileName, Long protocolo_id, SubStatusEventosBoleto subStatusEvento,
+            TipoEvento tipoEvento) {
+
         var eventoRequest = new EventosProtocoloBoletoRequest();
         eventoRequest.setNomeArquivo(fileName);
         eventoRequest.setIdProtocolo(protocolo_id);
         eventoRequest.setSistemaOrigemEvento(SISTEMA_ORIGEM);
         eventoRequest.setSubStatusEvento(subStatusEvento);
         eventoRequest.setTipoEvento(tipoEvento);
-        
+
+        // Registra o evento do protocolo do boleto
+        protocoloServiceProxy.novoEvento(eventoRequest);
+    }
+
+    public void registraEventoErroProtocolo(String fileName, Long protocolo_id, SubStatusEventosBoleto subStatusEvento,
+            TipoEvento tipoEvento, String mensagemErro) {
+
+        var eventoRequest = new EventosProtocoloBoletoRequest();
+        eventoRequest.setNomeArquivo(fileName);
+        eventoRequest.setIdProtocolo(protocolo_id);
+        eventoRequest.setSistemaOrigemEvento(SISTEMA_ORIGEM);
+        eventoRequest.setSubStatusEvento(subStatusEvento);
+        eventoRequest.setTipoEvento(tipoEvento);
+        eventoRequest.setMensagem(mensagemErro);
+
         // Registra o evento do protocolo do boleto
         protocoloServiceProxy.novoEvento(eventoRequest);
     }
@@ -50,7 +66,7 @@ public class RegistraProtocoloService {
         BeanUtils.copyProperties(protocolo, protocoloRequest);
         protocoloRequest.setStatusProtocolo(statusProtocolo);
         protocoloRequest.setMensagemErro(mensagemErro);
-        
+
         // Chama o serviço de protocolo para atualizar o protocolo
         protocoloServiceProxy.atualizaProtocolo(protocoloRequest);
     }

@@ -12,6 +12,18 @@ public class RabbitMQConfig {
     public static final String QUEUE_TESSERACT = "tesseract-boleto-queue";
     public static final String EXCHANGE_NAME = "novo-boleto-exchange";
     public static final String ROUTING_KEY_TESSERACT = "tesseract-boleto-route-key";
+    public static final String ROUTING_KEY_TESSERACT_DONE = "tesseract-boleto-route-key-done";
+    public static final String QUEUE_TESSERACT_DONE = "tesseract-boleto-queue-done";
+
+    @Bean
+    public Queue queueTesseractDone() {
+        return new Queue(QUEUE_TESSERACT_DONE, true);
+    }
+
+    @Bean
+    public Binding bindingTesseractDone(Queue queueTesseractDone, DirectExchange exchange) {
+        return BindingBuilder.bind(queueTesseractDone).to(exchange).with(ROUTING_KEY_TESSERACT_DONE);
+    }
 
     @Bean
     public Queue queueTesseract() {

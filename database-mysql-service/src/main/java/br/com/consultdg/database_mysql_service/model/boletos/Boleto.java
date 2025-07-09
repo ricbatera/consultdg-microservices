@@ -64,6 +64,7 @@ public class Boleto {
     @Column(name = "itens_validados")
     private Boolean itensValidados;
 
+
     @Lob
     @Column(columnDefinition = "LONGTEXT", name = "json_chatgpt")
     private String json;
@@ -72,12 +73,25 @@ public class Boleto {
     @Column(columnDefinition = "LONGTEXT", name = "string_extraida_tesseract")
     private String stringExtraidaTesseract;
 
+    @Column(name = "tesseract_finalizado")
+    private Boolean tesseractFinalizado = false;
+
+    @Column(name = "chatgpt_finalizado")
+    private Boolean chatgptFinalizado = false;
+
+
 
     public String getJson() { return json; }
     public void setJson(String json) { this.json = json; }
 
     public String getStringExtraidaTesseract() { return stringExtraidaTesseract; }
     public void setStringExtraidaTesseract(String stringExtraidaTesseract) { this.stringExtraidaTesseract = stringExtraidaTesseract; }
+
+    public Boolean getTesseractFinalizado() { return tesseractFinalizado; }
+    public void setTesseractFinalizado(Boolean tesseractFinalizado) { this.tesseractFinalizado = tesseractFinalizado; }
+
+    public Boolean getChatgptFinalizado() { return chatgptFinalizado; }
+    public void setChatgptFinalizado(Boolean chatgptFinalizado) { this.chatgptFinalizado = chatgptFinalizado; }
 
     public Boolean getItensValidados() { return itensValidados;}
     public void setItensValidados(Boolean itensValidados) { this.itensValidados = itensValidados;}

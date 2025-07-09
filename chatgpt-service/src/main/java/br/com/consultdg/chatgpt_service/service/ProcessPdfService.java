@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import br.com.consultdg.chatgpt_service.dto.BoletoDTO;
+import br.com.consultdg.chatgpt_service.producer.ChatGptProducer;
 import br.com.consultdg.database_mysql_service.model.boletos.Boleto;
 import br.com.consultdg.database_mysql_service.repository.boletos.BoletoRepository;
 import br.com.consultdg.database_mysql_service.model.boletos.ImagemBase64;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProcessPdfService {
-
+    
     Logger logger = LoggerFactory.getLogger(ProcessPdfService.class);
 
     public static final String FORMAT_JPEG = "jpeg";
@@ -53,10 +54,9 @@ public class ProcessPdfService {
     @Value("${path.base}")
     private String basePath;
 
-    public ProcessPdfService() {
-        // Garante que o ImageIO reconheça JPEG
-        ImageIO.scanForPlugins();
-    }
+
+    @Autowired
+    private ChatGptProducer chatGptProducer;
 
     public List<String> convertAllPdfsToBase64Images() {
         logger.info("Convertendo todos os PDFs no diretório: {}", basePath);
@@ -156,8 +156,10 @@ public class ProcessPdfService {
                 while (!salvo && tentativas < 3) {
                     try {
                         Boleto entity = converterParaEntity(dto, request);
+                        entity.setChatgptFinalizado(true);
                         boletoRepository.save(entity);
                         logger.info("Boleto persistido: {}", entity.getNomeArquivo());
+                        chatGptProducer.sendProtocoloId(request.idProtocolo());
                         salvo = true;
                     } catch (org.springframework.dao.OptimisticLockingFailureException | jakarta.persistence.OptimisticLockException e) {
                         tentativas++;
