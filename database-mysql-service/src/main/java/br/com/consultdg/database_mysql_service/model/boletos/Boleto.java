@@ -54,7 +54,7 @@ public class Boleto {
     @Column(columnDefinition = "LONGTEXT", name = "arquivo_txt_base64")
     private String arquivoTxtBase64;
 
-    @OneToMany(mappedBy = "boleto", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "boleto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ItemBoleto> itens;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -63,6 +63,15 @@ public class Boleto {
 
     @Column(name = "itens_validados")
     private Boolean itensValidados;
+
+    @Column(name = "codigo_barras_validado")
+    private Boolean codigoBarrasValidado = false;
+
+    @Column(name = "data_vencimento_validado")
+    private Boolean dataVencimentoValidado = false;
+
+    @Column(name = "valor_validado")
+    private Boolean valorValidado = false;
 
 
     @Lob
@@ -95,6 +104,15 @@ public class Boleto {
 
     public Boolean getItensValidados() { return itensValidados;}
     public void setItensValidados(Boolean itensValidados) { this.itensValidados = itensValidados;}
+
+    public Boolean getCodigoBarrasValidado() { return codigoBarrasValidado; }
+    public void setCodigoBarrasValidado(Boolean codigoBarrasValidado) { this.codigoBarrasValidado = codigoBarrasValidado; }
+
+    public Boolean getDataVencimentoValidado() { return dataVencimentoValidado; }
+    public void setDataVencimentoValidado(Boolean dataVencimentoValidado) { this.dataVencimentoValidado = dataVencimentoValidado; }
+
+    public Boolean getValorValidado() { return valorValidado; }
+    public void setValorValidado(Boolean valorValidado) { this.valorValidado = valorValidado; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
