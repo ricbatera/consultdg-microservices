@@ -5,7 +5,8 @@ public enum StatusProtocolo {
     ABERTO(2, "ABERTO", "Protocolo aberto com sucesso"),
     EM_ANDAMENTO(3, "EM_ANDAMENTO", "Protocolo está em andamento"),
     COM_ERRO(4, "COM_ERRO", "Protocolo está no estado de ERRO"),
-    FINALIZADO(5, "FINALIZADO", "Protocolo finalizado com sucesso");
+    FINALIZADO(5, "FINALIZADO", "Protocolo finalizado com sucesso"),
+    BOLETO_NAO_VALIDADO(6, "BOLETO_NAO_VALIDADO", "Boleto não validado");
 
     private final int indice;
     private final String nome;

@@ -28,11 +28,13 @@ public class ValidaBoletoService {
     @Autowired
     private RegistraProtocoloService registraProtocoloService;
 
+    Boleto boleto;
+
     private final String REGEX_PADRAO_CODIGO_BARRAS = "((\\d{5}(\\.)?(\\s)?\\d{5}(\\.)?(\\s)?\\d{5}(\\s)?(\\.)?\\d{6}(\\.)?(\\s)?\\d{5}(\\.)?(\\s)?\\d{6}(\\.)?(\\s)?\\d(\\.)?(\\s)?\\d{14})|(\\d{11}\\-?\\s?\\.?\\d\\s?\\.?\\-?\\d{11}\\-?\\.?\\s?\\d\\s\\d{11}\\-?\\s?\\.?\\d\\s\\d{11}\\-?\\.?\\s?\\d)|(\\d{12}\\s\\d{12}\\s\\d{12}\\s\\d{12}))";
 
     public void validaBoleto(Long protocoloId) {
         try {
-            Boleto boleto = boletoRepository.findByProtocoloId(protocoloId)
+            boleto = boletoRepository.findByProtocoloId(protocoloId)
                     .orElseThrow(
                             () -> new RuntimeException("Boleto não encontrado para o protocolo ID: " + protocoloId));
             // verifica se o boleto já foi processado pelo Tesseract e ChatGPT
@@ -44,8 +46,10 @@ public class ValidaBoletoService {
                 boolean itensIsValid = validaItens(boleto);
                 if (codBarrasIsValid && dataVencimentoIsValid && valorIsValid && itensIsValid) {
                     logger.info("Boleto válido. Protocolo: {}", protocoloId);
+                    registraProtocoloService.atualizaProtocolo(protocoloId, StatusProtocolo.FINALIZADO, null);
                 } else {
                     logger.warn("Boleto inválido. Protocolo: {}", protocoloId);
+                    registraProtocoloService.atualizaProtocolo(protocoloId, StatusProtocolo.BOLETO_NAO_VALIDADO, getItemNaoValidado());
                 }
                 boletoRepository.save(boleto);
             } else {
@@ -63,6 +67,24 @@ public class ValidaBoletoService {
             registraProtocoloService.atualizaProtocolo(protocoloId, StatusProtocolo.COM_ERRO,
                     "Erro ao validar boleto: " + e.getMessage());
         }
+    }
+
+    private String getItemNaoValidado(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("O que não foi validado no boleto: ");
+        if (!validaCodigoBarras(boleto)) {
+            sb.append("\nCódigo de barras inválido. ");
+        }
+        if (!validaDataVencimento(boleto)) {
+            sb.append("\nData de vencimento inválida. ");
+        }
+        if (!validaValor(boleto)) {
+            sb.append("\nValor inválido. ");
+        }
+        if (!validaItens(boleto)) {
+            sb.append("\nItens inválidos ou a somatória está incorreta. ");
+        }
+        return sb.toString();
     }
 
     private boolean validaCodigoBarras(Boleto boleto) {
