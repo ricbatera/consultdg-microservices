@@ -31,13 +31,15 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProcessPdfService {
-    
+
     Logger logger = LoggerFactory.getLogger(ProcessPdfService.class);
 
     public static final String FORMAT_JPEG = "jpeg";
     public static final String FORMAT_PNG = "png";
     public static final String FORMAT_DEFAULT = FORMAT_PNG; // Troque aqui para FORMAT_JPEG ou FORMAT_PNG
-
+    List<String> imagesBase64 = new ArrayList<>();
+    BoletoBase64Request request;
+    Boleto boleto;
 
     @Autowired
     private ChatGptBoletoService chatGptBoletoService;
@@ -53,7 +55,6 @@ public class ProcessPdfService {
 
     @Value("${path.base}")
     private String basePath;
-
 
     @Autowired
     private ChatGptProducer chatGptProducer;
@@ -99,10 +100,42 @@ public class ProcessPdfService {
     }
 
     public void processaPdfBase64(BoletoBase64Request entity) {
+        request = entity;
         logger.info("Processando PDF base64 para o protocolo: {}", entity.idProtocolo());
-        registraProtocoloService.registraEventoProtocolo(null,entity.idProtocolo(),SubStatusEventosBoleto.EM_ANDAMENTO,TipoEvento.PROCESSA_BOLETO_EM_ANDAMENTO_CHATGPT);
-        List<String> imagesBase64 = new ArrayList<>();
-        String pdfBase64 = entity.base64Boleto();
+        registraProtocoloService.registraEventoProtocolo(null, entity.idProtocolo(),
+                SubStatusEventosBoleto.EM_ANDAMENTO, TipoEvento.PROCESSA_BOLETO_EM_ANDAMENTO_CHATGPT);
+        recuperaBoleto();
+        criaImagensBase64();
+        saveImagesbase64();
+        //processaImagensGpt();
+        processaPdf();
+
+    }
+
+    private void recuperaBoleto() {
+        if (request == null) {
+            throw new IllegalStateException("BoletoBase64Request não foi inicializado.");
+        }
+        boleto = boletoRepository.findByProtocoloId(request.idProtocolo())
+                .orElseThrow(
+                        () -> new RuntimeException("Boleto não encontrado para o protocolo: " + request.idProtocolo()));
+        logger.info("Boleto recuperado: {}", boleto.getNomeArquivo());
+    }
+
+    private void processaPdf() {
+        if (boleto == null)
+            throw new IllegalStateException("BoletoBase64Request não foi inicializado.");
+        BoletoDTO boletoDTO = chatGptBoletoService.analisarPdf(boleto.getArquivoPdfBase64());
+        if (boletoDTO != null) {
+            saveResult(boletoDTO);
+        } else {
+            logger.warn("Nenhum boleto encontrado no PDF fornecido ou o chatgpt não foi capaz de processar o arquivo.");
+        }
+    }
+
+    private void criaImagensBase64() {
+        imagesBase64.clear();
+        String pdfBase64 = request.base64Boleto();
         try {
             byte[] decodedBytes = Base64.getDecoder().decode(pdfBase64);
             try (PDDocument document = PDDocument.load(decodedBytes)) {
@@ -115,65 +148,67 @@ public class ProcessPdfService {
                     String mime = FORMAT_DEFAULT.equals(FORMAT_PNG) ? "png" : "jpeg";
                     imagesBase64.add("data:image/" + mime + ";base64," + base64);
                 }
-                processaGpt(imagesBase64, entity);
+                // processaGpt(imagesBase64, entity);
             }
-        registraProtocoloService.registraEventoProtocolo(null,entity.idProtocolo(),SubStatusEventosBoleto.EM_ANDAMENTO,TipoEvento.PROCESSA_BOLETO_FINALIZADO_CHATGPT);
+            // tirar daqui
+            registraProtocoloService.registraEventoProtocolo(null, request.idProtocolo(),
+                    SubStatusEventosBoleto.EM_ANDAMENTO, TipoEvento.PROCESSA_BOLETO_FINALIZADO_CHATGPT);
         } catch (Exception e) {
-            registraProtocoloService.registraEventoProtocolo(null,entity.idProtocolo(),SubStatusEventosBoleto.ERRO,TipoEvento.PROCESSA_BOLETO_ERRO_CHATGPT);
-            registraProtocoloService.atualizaProtocolo(entity.idProtocolo(),StatusProtocolo.COM_ERRO, e.getLocalizedMessage());
+            registraProtocoloService.registraEventoProtocolo(null, request.idProtocolo(), SubStatusEventosBoleto.ERRO,
+                    TipoEvento.PROCESSA_BOLETO_ERRO_CHATGPT);
+            registraProtocoloService.atualizaProtocolo(request.idProtocolo(), StatusProtocolo.COM_ERRO,
+                    e.getLocalizedMessage());
             throw new RuntimeException("Erro ao processar PDF base64", e);
         }
     }
 
-    private void processaGpt(List<String> imagensBase64, BoletoBase64Request request) {
-        // Recupera o boleto pelo protocolo_id
-        Boleto boleto = boletoRepository.findByProtocoloId(request.idProtocolo())
-                .orElseThrow(() -> new RuntimeException("Boleto não encontrado para o protocolo: " + request.idProtocolo()));
-
-        for (int i = 0; i < imagensBase64.size(); i++) {
-            String imagemBase64 = imagensBase64.get(i);
-            String formato = "png";
-            if (imagemBase64.startsWith("data:image/")) {
-                int idx = imagemBase64.indexOf(';');
-                if (idx > 0) {
-                    String mime = imagemBase64.substring(11, idx);
-                    formato = mime;
-                }
-            }
-            // Remove o prefixo data:image/...;base64,
-            String base64SemPrefixo = imagemBase64.contains(",") ? imagemBase64.substring(imagemBase64.indexOf(",") + 1) : imagemBase64;
-
-            ImagemBase64 imagem = new ImagemBase64(base64SemPrefixo, formato, i + 1, boleto);
-            imagemBase64Repository.save(imagem);
-        }
-
-        // Chama a API do ChatGPT para cada base64 (mantém lógica original)
-        for (int i = 0; i < imagensBase64.size(); i++) {
-            List<BoletoDTO> boletos = chatGptBoletoService.analisarImagens(List.of(imagensBase64.get(i)));
+    private void processaImagensGpt() {
+        for (int i = 0; i < imagesBase64.size(); i++) {
+            List<BoletoDTO> boletos = chatGptBoletoService.analisarImagens(List.of(imagesBase64.get(i)));
             for (BoletoDTO dto : boletos) {
-                boolean salvo = false;
-                int tentativas = 0;
-                while (!salvo && tentativas < 3) {
-                    try {
-                        Boleto entity = converterParaEntity(dto, request);
-                        entity.setChatgptFinalizado(true);
-                        boletoRepository.save(entity);
-                        logger.info("Boleto persistido: {}", entity.getNomeArquivo());
-                        chatGptProducer.sendProtocoloId(request.idProtocolo());
-                        salvo = true;
-                    } catch (org.springframework.dao.OptimisticLockingFailureException | jakarta.persistence.OptimisticLockException e) {
-                        tentativas++;
-                        logger.warn("Concorrência detectada ao salvar boleto. Tentando novamente (tentativa {}/3)...", tentativas);
-                        // Recarrega o registro atualizado do banco
-                        // Nada a fazer aqui, pois converterParaEntity já busca o registro atualizado
-                        // O método converterParaEntity já busca o registro atualizado
-                        if (tentativas >= 3) {
-                            logger.error("Falha ao salvar boleto após 3 tentativas devido a concorrência.", e);
-                            throw e;
-                        }
-                    }
+                saveResult(dto);
+            }
+        }
+    }
+
+    private void saveResult(BoletoDTO dto) {
+        boolean salvo = false;
+        int tentativas = 0;
+        while (!salvo && tentativas < 3) {
+            try {
+                Boleto entity = converterParaEntity(dto, request);
+                entity.setChatgptFinalizado(true);
+                boletoRepository.save(entity);
+                logger.info("Boleto persistido: {}", entity.getNomeArquivo());
+                chatGptProducer.sendProtocoloId(request.idProtocolo());
+                salvo = true;
+            } catch (org.springframework.dao.OptimisticLockingFailureException
+                    | jakarta.persistence.OptimisticLockException e) {
+                tentativas++;
+                logger.warn("Concorrência detectada ao salvar boleto. Tentando novamente (tentativa {}/3)...",
+                        tentativas);
+                // Recarrega o registro atualizado do banco
+                // Nada a fazer aqui, pois converterParaEntity já busca o registro atualizado
+                // O método converterParaEntity já busca o registro atualizado
+                if (tentativas >= 3) {
+                    logger.error("Falha ao salvar boleto após 3 tentativas devido a concorrência.", e);
+                    throw e;
                 }
             }
+        }
+    }
+
+    private void saveImagesbase64() {
+        if (imagesBase64.isEmpty()) {
+            logger.warn("Nenhuma imagem base64 encontrada para salvar.");
+            return;
+        }
+        int pageNumber = 0;
+        for (String imageBase64 : imagesBase64) {
+            String base64SemPrefixo = imageBase64.contains(",") ? imageBase64.substring(imageBase64.indexOf(",") + 1)
+                    : imageBase64;
+            ImagemBase64 imagem = new ImagemBase64(base64SemPrefixo, FORMAT_DEFAULT, pageNumber++, boleto);
+            imagemBase64Repository.save(imagem);
         }
     }
 
@@ -197,7 +232,8 @@ public class ProcessPdfService {
         // Conversão de tipo_boleto (String) para Enum
         if (dto.getTipo_boleto() != null) {
             try {
-                entity.setTipoBoleto(br.com.consultdg.database_mysql_service.enums.TipoBoleto.valueOf(dto.getTipo_boleto()));
+                entity.setTipoBoleto(
+                        br.com.consultdg.database_mysql_service.enums.TipoBoleto.valueOf(dto.getTipo_boleto()));
             } catch (Exception e) {
                 entity.setTipoBoleto(null);
             }
