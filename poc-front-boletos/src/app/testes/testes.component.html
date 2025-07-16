@@ -1,0 +1,54 @@
+<main class="main">
+  <div class="container">
+    <a routerLink="/" class="back-link">← Voltar para Home</a>
+    
+    <div class="header">
+      <h1>Testes de API</h1>
+    </div>
+
+    <section>
+      <div class="section-title">Testar conexão com API</div>
+      <button (click)="chamarHello()" style="min-width:120px;">Chamar API Hello</button>
+      <div *ngIf="helloMsg" style="margin-top:0.5rem; color: #007bff; font-weight: 500;">{{ helloMsg }}</div>
+    </section>
+
+    <section>
+      <app-upload-pdf></app-upload-pdf>
+    </section>
+
+    <section>
+      <div class="section-title">Download de PDF de Boleto</div>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="number" min="1" [(ngModel)]="downloadId" placeholder="ID do boleto" style="padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc; width: 160px;" />
+        <button (click)="baixarPdf()" style="min-width:120px;">Download PDF</button>
+      </div>
+      <div *ngIf="downloadError" style="color: #d32f2f; margin-top: 0.5rem;">{{ downloadError }}</div>
+    </section>
+
+    <section>
+      <div class="section-title">Download das Imagens do Boleto</div>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="number" min="1" [(ngModel)]="downloadId" placeholder="ID do boleto" style="padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc; width: 160px;" />
+        <button (click)="baixarImagensBoleto()" style="min-width:120px;">Download Imagens</button>
+      </div>
+      <div *ngIf="downloadImagensError" style="color: #d32f2f; margin-top: 0.5rem;">{{ downloadImagensError }}</div>
+      <div *ngIf="imagensBoleto && imagensBoleto.length">
+        <div style="margin-top:1rem;">Imagens retornadas:</div>
+        <div style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:0.5rem;">
+          <div *ngFor="let img of imagensBoleto">
+            <div>Página: {{ img.numeroPagina }}</div>
+            <img [src]="'data:image/' + img.formatoImagem + ';base64,' + img.imagemBase64"
+                 [alt]="'Página ' + img.numeroPagina"
+                 style="max-width:200px; border:1px solid #ccc; border-radius:6px; cursor: pointer;"
+                 (click)="abrirImagemModal(img)" />
+          </div>
+        </div>
+        <div *ngIf="imagemModalAberto" class="modal-imagem" (click)="fecharImagemModal()">
+          <div class="modal-imagem-backdrop"></div>
+          <img [src]="imagemModalSrc" alt="Imagem em destaque" class="modal-imagem-img" (click)="$event.stopPropagation()" />
+          <button class="modal-imagem-fechar" (click)="fecharImagemModal(); $event.stopPropagation()">&times;</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>

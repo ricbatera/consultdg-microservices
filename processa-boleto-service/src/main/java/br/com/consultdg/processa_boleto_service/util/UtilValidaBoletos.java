@@ -3,6 +3,8 @@ package br.com.consultdg.processa_boleto_service.util;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,9 +24,8 @@ public class UtilValidaBoletos {
     }
 
     public static String removePontosEspaco(String codigoBarras) {
-        if (codigoBarras == null) {
-            return null;
-        }
+        if (codigoBarras == null)return null;
+        
         return codigoBarras.replaceAll("[.\\s\\-]", "");
     }
 
@@ -80,5 +81,4 @@ public class UtilValidaBoletos {
             return null;
         }
     }
-
 }

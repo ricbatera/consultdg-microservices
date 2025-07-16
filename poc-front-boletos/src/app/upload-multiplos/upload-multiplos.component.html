@@ -1,0 +1,109 @@
+<main class="main">
+  <div class="container">
+    <a routerLink="/" class="back-link">← Voltar para Home</a>
+    
+    <div class="header">
+      <h1>Upload Múltiplos Boletos</h1>
+      <p>Selecione vários boletos em PDF para envio simultâneo</p>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="upload-section">
+      <h3>Selecionar Boletos</h3>
+      <p>Clique no botão abaixo para selecionar múltiplos arquivos PDF</p>
+      <input 
+        type="file" 
+        class="file-input" 
+        #fileInput 
+        (change)="onFileSelected($event)"
+        multiple
+        accept=".pdf"
+      />
+      <button 
+        class="upload-btn" 
+        (click)="fileInput.click()"
+        [disabled]="uploading"
+      >
+        📄 Selecionar PDFs
+      </button>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="stats" *ngIf="boletos.length > 0">
+      <div class="stat-card">
+        <div class="stat-number" style="color: #ffc107;">{{ getBoletosCount('aguardando') }}</div>
+        <div class="stat-label">Aguardando</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color: #17a2b8;">{{ getBoletosCount('enviando') }}</div>
+        <div class="stat-label">Enviando</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color: #28a745;">{{ getBoletosCount('sucesso') }}</div>
+        <div class="stat-label">Sucesso</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color: #dc3545;">{{ getBoletosCount('erro') }}</div>
+        <div class="stat-label">Erro</div>
+      </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="actions" *ngIf="boletos.length > 0">
+      <button 
+        class="btn btn-primary" 
+        (click)="enviarTodos()"
+        [disabled]="uploading || getBoletosCount('aguardando') === 0"
+      >
+        {{ uploading ? 'Enviando...' : 'Enviar Todos' }}
+      </button>
+      <button 
+        class="btn btn-secondary" 
+        (click)="limparLista()"
+        [disabled]="uploading"
+      >
+        Limpar Lista
+      </button>
+    </div>
+
+    <!-- Lista de Boletos -->
+    <div class="boletos-list" *ngIf="boletos.length > 0">
+      <div 
+        class="boleto-item" 
+        *ngFor="let boleto of boletos"
+      >
+        <div class="boleto-info">
+          <div class="boleto-name">{{ boleto.file.name }}</div>
+          <div class="boleto-size">{{ formatFileSize(boleto.file.size) }}</div>
+          <div class="boleto-message" *ngIf="boleto.message">{{ boleto.message }}</div>
+        </div>
+        
+        <div class="boleto-status">
+          <div class="status-badge" [style.background-color]="getStatusColor(boleto.status)">
+            {{ getStatusText(boleto.status) }}
+          </div>
+          <div class="progress-bar" *ngIf="boleto.status === 'enviando'">
+            <div 
+              class="progress-fill" 
+              [style.width.%]="boleto.progress || 0"
+            ></div>
+          </div>
+        </div>
+        
+        <button 
+          class="remove-btn" 
+          (click)="removeBoleto(boleto.id)"
+          [disabled]="boleto.status === 'enviando'"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- Estado Vazio -->
+    <div class="empty-state" *ngIf="boletos.length === 0">
+      <h3>Nenhum boleto selecionado</h3>
+      <p>Use o botão acima para selecionar arquivos PDF de boletos</p>
+    </div>
+  </div>
+</main>

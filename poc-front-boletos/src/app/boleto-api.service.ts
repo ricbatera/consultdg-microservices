@@ -59,6 +59,37 @@ export class BoletoApiService {
     return response.json();
   }
 
+  async uploadBoletoMultiplo(file: File): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64String = reader.result as string;
+          const arquivoBase64 = base64String.split(',')[1]; // Remove o prefixo data:application/pdf;base64,
+          
+          const response = await this.enviarBoleto(file.name, arquivoBase64);
+          resolve({
+            success: true,
+            message: 'Boleto enviado com sucesso!',
+            data: response
+          });
+        } catch (error: any) {
+          reject({
+            success: false,
+            message: error.message || 'Erro ao enviar boleto'
+          });
+        }
+      };
+      reader.onerror = () => {
+        reject({
+          success: false,
+          message: 'Erro ao ler o arquivo'
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   private getFileNameFromResponse(response: Response): string | null {
     const disposition = response.headers.get('Content-Disposition');
     if (disposition) {

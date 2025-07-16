@@ -6,7 +6,10 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.consultdg.api_boleto_service.dto.UrlS3Response;
 import br.com.consultdg.api_boleto_service.proxy.S3ServiceProxy;
 import br.com.consultdg.api_boleto_service.service.RegistraProtocoloService;
+import br.com.consultdg.database_mysql_service.repository.projection.ProtocoloBoletoProjection;
 import br.com.consultdg.api_boleto_service.service.ProcessaBoletoService;
+import br.com.consultdg.api_boleto_service.service.ProtocoloService;
+import br.com.consultdg.api_boleto_service.dto.AllProtocoloRequest;
 import br.com.consultdg.api_boleto_service.dto.NovoBoletoRequest;
 import br.com.consultdg.api_boleto_service.dto.ResponseDefault;
 import br.com.consultdg.api_boleto_service.service.DownloadPdfService;
@@ -16,6 +19,8 @@ import br.com.consultdg.protocolo_service_util.enums.boletos.SubStatusEventosBol
 import br.com.consultdg.protocolo_service_util.enums.boletos.TipoEvento;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +57,9 @@ public class AppBoletoController {
 
 	@Autowired
 	private BoletoProducer boletoProducer;
+
+	@Autowired
+	private ProtocoloService protocoloService;
 
 	@GetMapping("get-url-to-upload-s3")
 	@Operation(summary = "Obtém a URL para upload de arquivos S3", description = "Gera uma URL pré-assinada para upload de arquivos no S3.")
@@ -125,5 +133,11 @@ public class AppBoletoController {
 		}}).toList();
 		return ResponseEntity.ok(response);
 	}
+
+	@GetMapping("/get-all-protocolos")
+	public List<ProtocoloBoletoProjection> getAllProtocolo(@RequestParam String dataInicial, @RequestParam String dataFinal) {
+		return protocoloService.getProtocolosByDateInicialFinal(new AllProtocoloRequest(dataInicial, dataFinal));
+	}
+	
 }
 

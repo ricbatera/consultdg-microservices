@@ -53,7 +53,7 @@ public class ValidaBoletoService {
                 }
                 boletoRepository.save(boleto);
             } else {
-                logger.warn("Boleto ainda não processado pelo Tesseract e ChatGPT. Aguarde. Protocolo: {}",
+                logger.warn("Boleto ainda não processado pelo Tesseract ou ChatGPT. Aguarde. Protocolo: {}",
                         protocoloId);
                 return;
             }
