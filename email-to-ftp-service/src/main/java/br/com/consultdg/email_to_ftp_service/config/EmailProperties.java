@@ -87,6 +87,7 @@ public class EmailProperties {
         private long interval;
         private int maxMessages;
         private boolean markAsRead;
+        private long timeout = 300000; // 5 minutos por padrão
 
         public long getInterval() {
             return interval;
@@ -110,6 +111,14 @@ public class EmailProperties {
 
         public void setMarkAsRead(boolean markAsRead) {
             this.markAsRead = markAsRead;
+        }
+
+        public long getTimeout() {
+            return timeout;
+        }
+
+        public void setTimeout(long timeout) {
+            this.timeout = timeout;
         }
     }
 }

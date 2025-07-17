@@ -125,7 +125,7 @@ body {
     margin-bottom: 40px;
 }
 
-.card {
+.card, .scheduling-card {
     background: var(--background-white);
     border-radius: var(--radius-md);
     padding: 24px;
@@ -137,12 +137,23 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.card:hover {
+.card:hover, .scheduling-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-medium);
 }
 
-.card-icon {
+/* Card de teste clicável */
+.card-icon.test + .card-content {
+    position: relative;
+}
+
+.card:has(.card-icon.test):hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 102, 204, 0.15);
+    border-color: var(--primary-color);
+}
+
+.card-icon, .scheduling-icon {
     width: 48px;
     height: 48px;
     border-radius: var(--radius-sm);
@@ -164,12 +175,21 @@ body {
     background: linear-gradient(135deg, var(--success-color) 0%, #66BB6A 100%);
 }
 
-.card-icon svg {
+.card-icon.test {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #29B6F6 100%);
+}
+
+.scheduling-icon {
+    background: var(--background-light);
+    color: var(--primary-color);
+}
+
+.card-icon svg, .scheduling-icon svg {
     width: 24px;
     height: 24px;
 }
 
-.card-content h3 {
+.card-content h3, .scheduling-content h3 {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 4px;
@@ -379,64 +399,69 @@ body {
     position: relative;
 }
 
-/* Controls Section */
-.controls-section {
+/* Scheduling Section */
+.scheduling-section {
     margin-bottom: 40px;
 }
 
-.controls-header {
+.scheduling-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 24px;
 }
 
-.controls-header h2 {
+.scheduling-header h2 {
     font-size: 24px;
     font-weight: 700;
     color: var(--text-primary);
 }
 
-.controls-grid {
+.scheduling-status {
+    background: var(--success-color);
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.scheduling-status.processing {
+    background: var(--warning-color);
+    animation: pulse 1.5s infinite;
+}
+
+.scheduling-status.warning {
+    background: var(--warning-color);
+}
+
+.scheduling-status.error {
+    background: var(--error-color);
+}
+
+.scheduling-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 24px;
 }
 
-.control-btn {
+.scheduling-card {
     background: var(--background-white);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 24px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 16px;
-    cursor: pointer;
     transition: all 0.2s ease;
-    text-align: left;
 }
 
-.control-btn:hover {
+.scheduling-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-medium);
 }
 
-.control-btn.primary {
-    border-color: var(--primary-color);
-}
-
-.control-btn.primary:hover {
-    background: var(--primary-color);
-    color: white;
-}
-
-.control-btn.secondary {
-    border-color: var(--accent-color);
-}
-
-.control-btn.secondary:hover {
-    background: var(--accent-color);
-    color: white;
-}
-
-.control-icon {
+.scheduling-icon {
     width: 48px;
     height: 48px;
     border-radius: var(--radius-sm);
@@ -445,32 +470,116 @@ body {
     justify-content: center;
     background: var(--background-light);
     color: var(--primary-color);
-    transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
-.control-btn:hover .control-icon {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.control-icon svg {
+.scheduling-icon svg {
     width: 24px;
     height: 24px;
 }
 
-.control-content h3 {
+.scheduling-content {
+    flex: 1;
+}
+
+.scheduling-content h3 {
     font-size: 18px;
     font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.scheduling-time {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-color);
     margin-bottom: 4px;
 }
 
-.control-content p {
-    font-size: 14px;
+.scheduling-time.processing {
+    color: var(--warning-color);
+}
+
+.scheduling-time.warning {
+    color: var(--warning-color);
+}
+
+.scheduling-time.success {
+    color: var(--success-color);
+}
+
+.scheduling-content small {
+    font-size: 12px;
     color: var(--text-secondary);
 }
 
-.control-btn:hover .control-content p {
-    color: rgba(255, 255, 255, 0.8);
+.scheduling-content .btn {
+    margin-top: 8px;
+}
+
+/* Emergency Section */
+.emergency-section {
+    background: linear-gradient(135deg, #FFF5F5 0%, #FED7D7 100%);
+    border: 1px solid #FC8181;
+    border-radius: var(--radius-md);
+    padding: 24px;
+    margin-bottom: 40px;
+}
+
+.emergency-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.emergency-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #C53030;
+}
+
+.emergency-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(197, 48, 48, 0.1);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    color: #C53030;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.emergency-warning svg {
+    width: 16px;
+    height: 16px;
+}
+
+.emergency-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.btn-warning {
+    background: var(--warning-color);
+    color: white;
+    border: none;
+}
+
+.btn-warning:hover {
+    background: #E68900;
+}
+
+.btn-error {
+    background: var(--error-color);
+    color: white;
+    border: none;
+}
+
+.btn-error:hover {
+    background: #D32F2F;
 }
 
 /* Log Section */
@@ -656,7 +765,7 @@ body {
     
     .status-cards,
     .stats-grid,
-    .controls-grid {
+    .scheduling-grid {
         grid-template-columns: 1fr;
     }
     

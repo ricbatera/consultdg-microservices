@@ -11,6 +11,16 @@ let statsData = {
     ultimaExecucao: null
 };
 
+// Dados de agendamento
+let schedulingData = {
+    lastExecutionTime: 0,
+    lastExecutionDuration: 0,
+    nextExecutionTime: 0,
+    processingInterval: 60000,
+    currentlyProcessing: false,
+    currentProcessingTime: 0
+};
+
 // Armazenar dados anteriores para comparação de tendências
 let previousStatsData = {
     emailsProcessados: 0,
@@ -36,8 +46,14 @@ document.addEventListener('DOMContentLoaded', function() {
 async function initializeApp() {
     await checkServiceHealth();
     await loadStats();
+    await loadSchedulingInfo();
     await autoTestConnections();
-    updateLastExecutionTime();
+    
+    // Garantir que o display seja atualizado após carregar os dados
+    updateSchedulingDisplay();
+    
+    // Adicionar event listener para o card de teste de conexões
+    setupTestConnectionsCard();
 }
 
 // Configurar auto-refresh
@@ -51,8 +67,11 @@ function setupAutoRefresh() {
     // Testar conexões a cada 2 minutos
     setInterval(autoTestConnections, 120000);
     
-    // Atualizar tempo da próxima execução a cada segundo
-    setInterval(updateLastExecutionTime, 1000);
+    // Atualizar informações de agendamento a cada 10 segundos
+    setInterval(loadSchedulingInfo, 10000);
+    
+    // Atualizar display de tempo em tempo real a cada segundo
+    setInterval(updateSchedulingDisplay, 1000);
 }
 
 // Verificar saúde do serviço
@@ -124,6 +143,38 @@ async function loadStats() {
     }
 }
 
+// Carregar informações de agendamento
+async function loadSchedulingInfo() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/scheduling`);
+        const data = await response.json();
+        
+        schedulingData = {
+            lastExecutionTime: data.lastExecutionTime || 0,
+            lastExecutionDuration: data.lastExecutionDuration || 0,
+            nextExecutionTime: data.nextExecutionTime || 0,
+            processingInterval: data.processingInterval || 300000, // 5 minutos por padrão
+            currentlyProcessing: data.currentlyProcessing || false,
+            currentProcessingTime: data.currentProcessingTime || 0
+        };
+        
+        updateSchedulingDisplay();
+        
+    } catch (error) {
+        console.error('Erro ao carregar informações de agendamento:', error);
+        // Em caso de erro, usar valores padrão
+        schedulingData = {
+            lastExecutionTime: 0,
+            lastExecutionDuration: 0,
+            nextExecutionTime: 0,
+            processingInterval: 300000, // 5 minutos
+            currentlyProcessing: false,
+            currentProcessingTime: 0
+        };
+        updateSchedulingDisplay();
+    }
+}
+
 // Atualizar UI das estatísticas
 function updateStatsUI() {
     document.getElementById('emailsProcessados').textContent = statsData.emailsProcessados;
@@ -140,6 +191,107 @@ function updateStatsUI() {
         
     // Calcular tendências baseadas nos valores atuais
     updateTrends();
+}
+
+// Atualizar display de informações de agendamento
+function updateSchedulingDisplay() {
+    const now = Date.now();
+    
+    // Atualizar última execução
+    if (schedulingData.lastExecutionTime > 0) {
+        const lastExecution = new Date(schedulingData.lastExecutionTime);
+        const lastExecutionElement = document.getElementById('ultimaExecucaoCompleta');
+        if (lastExecutionElement) {
+            lastExecutionElement.textContent = lastExecution.toLocaleString('pt-BR');
+        }
+        
+        // Duração da última execução
+        const durationElement = document.getElementById('duracaoUltimaExecucao');
+        if (durationElement) {
+            const duration = Math.round(schedulingData.lastExecutionDuration / 1000);
+            durationElement.textContent = `${duration}s`;
+        }
+    }
+    
+    // Atualizar próxima execução
+    if (schedulingData.nextExecutionTime > 0) {
+        const nextExecution = new Date(schedulingData.nextExecutionTime);
+        const nextExecutionElement = document.getElementById('proximaExecucao');
+        if (nextExecutionElement) {
+            if (schedulingData.currentlyProcessing) {
+                nextExecutionElement.textContent = 'Processando agora...';
+                nextExecutionElement.className = 'scheduling-time processing';
+            } else if (schedulingData.nextExecutionTime <= now) {
+                nextExecutionElement.textContent = 'Executando em breve...';
+                nextExecutionElement.className = 'scheduling-time warning';
+            } else {
+                const timeUntilNext = Math.max(0, Math.round((schedulingData.nextExecutionTime - now) / 1000));
+                const minutes = Math.floor(timeUntilNext / 60);
+                const seconds = timeUntilNext % 60;
+                nextExecutionElement.textContent = `${minutes}m ${seconds}s`;
+                nextExecutionElement.className = 'scheduling-time success';
+            }
+        }
+    } else {
+        // Se não há dados de próxima execução, mostrar mensagem padrão
+        const nextExecutionElement = document.getElementById('proximaExecucao');
+        if (nextExecutionElement) {
+            nextExecutionElement.textContent = 'Aguardando dados...';
+            nextExecutionElement.className = 'scheduling-time';
+        }
+    }
+    
+    // Atualizar intervalo de processamento
+    const intervalElement = document.getElementById('intervaloProcessamento');
+    if (intervalElement) {
+        const intervalMinutes = Math.round(schedulingData.processingInterval / 60000);
+        intervalElement.textContent = `${intervalMinutes} minutos`;
+    }
+    
+    // Status de processamento atual (para o card na seção de conexões)
+    const processStatusElement = document.getElementById('processStatus');
+    if (processStatusElement) {
+        if (schedulingData.currentlyProcessing) {
+            processStatusElement.textContent = 'Processando';
+            processStatusElement.className = 'card-status processing';
+        } else {
+            processStatusElement.textContent = 'Ativo';
+            processStatusElement.className = 'card-status success';
+        }
+    }
+    
+    // Status de processamento atual (para o header da seção)
+    const statusElement = document.getElementById('statusProcessamento');
+    if (statusElement) {
+        if (schedulingData.currentlyProcessing) {
+            const processingTime = Math.round(schedulingData.currentProcessingTime / 1000);
+            statusElement.textContent = `Processando (${processingTime}s)`;
+            statusElement.className = 'scheduling-status processing';
+            
+            // Alerta se estiver processando há muito tempo (mais de 5 minutos)
+            if (schedulingData.currentProcessingTime > 300000) {
+                statusElement.textContent = `⚠️ Processando há ${Math.round(processingTime / 60)}min`;
+                statusElement.className = 'scheduling-status warning';
+                
+                // Mostrar notificação se ainda não foi mostrada
+                if (!window.longProcessingWarningShown) {
+                    showNotification('Processamento demorado detectado. Considere usar Reset Forçado.', 'warning');
+                    addLogEntry('warning', `Processamento em andamento há ${Math.round(processingTime / 60)} minutos`);
+                    window.longProcessingWarningShown = true;
+                }
+            }
+        } else {
+            statusElement.textContent = 'Aguardando';
+            statusElement.className = 'scheduling-status success';
+            window.longProcessingWarningShown = false; // Reset warning flag
+        }
+    }
+    
+    // Verificar se há atraso na execução
+    if (schedulingData.nextExecutionTime > 0 && schedulingData.nextExecutionTime < now - 60000 && !schedulingData.currentlyProcessing) {
+        const delayMinutes = Math.round((now - schedulingData.nextExecutionTime) / 60000);
+        addLogEntry('warning', `Execução com atraso de ${delayMinutes} minutos detectada`);
+    }
 }
 
 // Testar conexões manualmente (chamada pelo botão)
@@ -269,56 +421,6 @@ function updateConnectionStatus(type, connectionData) {
     statusElement.textContent = statusText;
     statusElement.className = `card-status ${statusClass}`;
     detailElement.textContent = connectionData.message || 'Status da conexão';
-}
-
-// Processar emails manualmente
-async function processEmails() {
-    const button = event.target.closest('.control-btn');
-    const originalContent = button.innerHTML;
-    
-    // Mostrar loading
-    button.innerHTML = `
-        <div class="control-icon">
-            <div class="loading"></div>
-        </div>
-        <div class="control-content">
-            <h3>Processando...</h3>
-            <p>Aguarde o processamento</p>
-        </div>
-    `;
-    button.disabled = true;
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/process`, {
-            method: 'POST'
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            showNotification('Processamento iniciado com sucesso', 'success');
-            
-            // Adicionar log
-            addLogEntry('success', 'Processamento manual iniciado pelo usuário');
-            
-            // Atualizar stats após 3 segundos para capturar mudanças
-            setTimeout(async () => {
-                await loadStats();
-                addLogEntry('info', 'Dados atualizados após processamento manual');
-            }, 3000);
-        } else {
-            throw new Error('Erro no processamento');
-        }
-    } catch (error) {
-        console.error('Erro ao processar emails:', error);
-        showNotification('Erro ao processar emails', 'error');
-        addLogEntry('error', 'Falha no processamento manual de emails');
-    } finally {
-        // Restaurar botão
-        setTimeout(() => {
-            button.innerHTML = originalContent;
-            button.disabled = false;
-        }, 2000);
-    }
 }
 
 // Resetar estatísticas
@@ -452,19 +554,33 @@ function updateTrends() {
     }
 }
 
-// Atualizar tempo da última execução
-function updateLastExecutionTime() {
-    const now = new Date();
-    const minutes = now.getMinutes();
-    const nextExecution = 5 - (minutes % 5);
+// Força reset em caso de travamento (função de emergência)
+async function forceReset() {
+    if (!confirm('Esta ação força o reset do processamento. Use apenas se o sistema estiver travado. Continuar?')) {
+        return;
+    }
     
-    const proximaElement = document.getElementById('proximaExecucao');
-    if (proximaElement) {
-        if (nextExecution === 5) {
-            proximaElement.textContent = 'Executando agora...';
+    try {
+        const response = await fetch(`${API_BASE_URL}/force-reset`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            showNotification('Reset forçado executado com sucesso', 'success');
+            addLogEntry('warning', 'Reset forçado executado pelo usuário');
+            
+            // Atualizar informações após 2 segundos
+            setTimeout(async () => {
+                await loadSchedulingInfo();
+                await loadStats();
+            }, 2000);
         } else {
-            proximaElement.textContent = `Próxima em ${nextExecution}min`;
+            throw new Error('Erro ao executar reset forçado');
         }
+    } catch (error) {
+        console.error('Erro ao executar reset forçado:', error);
+        showNotification('Erro ao executar reset forçado', 'error');
+        addLogEntry('error', 'Falha ao executar reset forçado');
     }
 }
 
@@ -675,3 +791,47 @@ setTimeout(() => {
     addLogEntry('success', 'Conexões testadas com sucesso');
     addLogEntry('info', 'Auto-refresh configurado para 30 segundos');
 }, 1000);
+
+// Configurar card de teste de conexões
+function setupTestConnectionsCard() {
+    const testCard = document.querySelector('.card-icon.test').closest('.card');
+    if (testCard) {
+        testCard.style.cursor = 'pointer';
+        testCard.addEventListener('click', handleTestConnectionsCardClick);
+    }
+}
+
+// Manipular clique no card de teste de conexões
+async function handleTestConnectionsCardClick() {
+    const testStatusElement = document.getElementById('testStatus');
+    const originalStatus = testStatusElement.textContent;
+    
+    // Mostrar loading
+    testStatusElement.textContent = 'Testando...';
+    testStatusElement.className = 'card-status warning';
+    
+    try {
+        await testConnections();
+        
+        // Atualizar status para sucesso
+        testStatusElement.textContent = 'Testado com Sucesso';
+        testStatusElement.className = 'card-status success';
+        
+        // Voltar ao estado original após 3 segundos
+        setTimeout(() => {
+            testStatusElement.textContent = 'Verificar Agora';
+            testStatusElement.className = 'card-status';
+        }, 3000);
+        
+    } catch (error) {
+        // Atualizar status para erro
+        testStatusElement.textContent = 'Erro no Teste';
+        testStatusElement.className = 'card-status error';
+        
+        // Voltar ao estado original após 3 segundos
+        setTimeout(() => {
+            testStatusElement.textContent = 'Verificar Agora';
+            testStatusElement.className = 'card-status';
+        }, 3000);
+    }
+}
