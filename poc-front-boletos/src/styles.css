@@ -1,1 +1,33 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Configuração global de fonte */
+* {
+  font-family: "Inter", Arial, sans-serif;
+}
+
+body {
+  font-family: "Inter", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f7f7fa;
+}
+
+/* Garantir que os ícones do Font Awesome funcionem corretamente */
+.fas, .far, .fab, .fal, .fad, .fas {
+  font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 5 Free", "Font Awesome 5 Pro", "FontAwesome";
+  font-weight: 900;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.fa-spin {
+  animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

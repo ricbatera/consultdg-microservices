@@ -1,0 +1,516 @@
+<main class="main">
+  <div class="container">
+    <a routerLink="/" class="back-link">← Voltar para Home</a>
+    
+    <div class="header">
+      <h1>Protocolos de Boletos</h1>
+      <p>Consulte e gerencie os protocolos de processamento de boletos</p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters">
+      <div class="filter-group">
+        <label for="dataInicial">Data Inicial:</label>
+        <input 
+          type="date" 
+          id="dataInicial"
+          [(ngModel)]="dataInicial"
+        />
+      </div>
+      <div class="filter-group">
+        <label for="dataFinal">Data Final:</label>
+        <input 
+          type="date" 
+          id="dataFinal"
+          [(ngModel)]="dataFinal"
+        />
+      </div>
+      <button 
+        class="btn btn-primary" 
+        (click)="buscarProtocolos()"
+        [disabled]="loading"
+      >
+        {{ loading ? '🔄 Buscando...' : '🔍 Buscar' }}
+      </button>
+      <button 
+        class="btn btn-secondary" 
+        (click)="recarregarProtocolos()"
+        [disabled]="loading"
+        title="Recarregar lista de protocolos"
+      >
+        <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i> Recarregar
+      </button>
+    </div>
+
+    <!-- Mensagem de erro -->
+    <div class="error" *ngIf="error">
+      {{ error }}
+    </div>
+
+    <!-- Mensagem de sucesso -->
+    <div class="success" *ngIf="reloadSuccess">
+      <i class="fas fa-check-circle"></i> Lista de protocolos recarregada com sucesso!
+    </div>
+
+    <!-- Conteúdo principal -->
+    <div class="content">
+      <!-- Painel esquerdo - Lista de protocolos -->
+      <div class="left-panel">
+        <div class="panel-title">Lista de Protocolos</div>
+        
+        <!-- Contador e Statistics Pills -->
+        <div class="count-info" *ngIf="protocolos.length > 0">
+          <div class="count">{{ protocolos.length }}</div>
+          <div class="label">{{ protocolos.length === 1 ? 'protocolo encontrado' : 'protocolos encontrados' }}</div>
+          
+          <!-- Pills de Status -->
+          <div class="status-pills" *ngIf="protocolos.length > 0">
+            <div class="status-pill success" 
+                 *ngIf="getStatusStats().concluido > 0"
+                 (click)="filterByStatus('concluido')"
+                 [class.active]="statusFilter === 'concluido'">
+              <i class="fas fa-check-circle"></i>
+              <span>{{ getStatusStats().concluido }} Concluído{{ getStatusStats().concluido > 1 ? 's' : '' }}</span>
+            </div>
+            <div class="status-pill processing" 
+                 *ngIf="getStatusStats().processando > 0"
+                 (click)="filterByStatus('processando')"
+                 [class.active]="statusFilter === 'processando'">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>{{ getStatusStats().processando }} Processando</span>
+            </div>
+            <div class="status-pill error" 
+                 *ngIf="getStatusStats().erro > 0"
+                 (click)="filterByStatus('erro')"
+                 [class.active]="statusFilter === 'erro'">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>{{ getStatusStats().erro }} Erro{{ getStatusStats().erro > 1 ? 's' : '' }}</span>
+            </div>
+            <div class="status-pill pending" 
+                 *ngIf="getStatusStats().pendente > 0"
+                 (click)="filterByStatus('pendente')"
+                 [class.active]="statusFilter === 'pendente'">
+              <i class="fas fa-clock"></i>
+              <span>{{ getStatusStats().pendente }} Pendente{{ getStatusStats().pendente > 1 ? 's' : '' }}</span>
+            </div>
+            <div class="status-pill clear" 
+                 *ngIf="statusFilter"
+                 (click)="filterByStatus('')"
+                 title="Limpar filtro">
+              <i class="fas fa-times"></i>
+              <span>Limpar</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" *ngIf="loading">
+          <div>🔄 Carregando protocolos...</div>
+        </div>
+
+        <!-- Cards -->
+        <div class="cards-container" *ngIf="!loading && protocolos.length > 0">
+          <div 
+            class="protocol-card" 
+            *ngFor="let protocolo of getFilteredProtocolos()" 
+            (click)="onProtocoloClick(protocolo)"
+            [class.selected]="selectedProtocolo?.id === protocolo.id"
+          >
+            <div class="card-header">
+              <div class="protocol-id">Protocolo #{{ protocolo.id }}</div>
+              <div class="protocol-status" [class]="protocolo.statusProtocolo.toLowerCase()">
+                {{ protocolo.statusProtocolo }}
+              </div>
+            </div>
+            
+            <div class="card-body">
+              <div class="card-info">
+                <div class="card-label">Data/Hora:</div>
+                <div class="card-value">{{ formatDateTime(protocolo.dataHoraCriacao) }}</div>
+              </div>
+              
+              <div class="card-info">
+                <div class="card-label">Arquivo:</div>
+                <div class="card-value">{{ protocolo.nomeArquivo }}</div>
+              </div>
+              
+              <div class="card-info" *ngIf="protocolo.mensagemErro">
+                <div class="card-label">Erro:</div>
+                <div class="card-value error">{{ protocolo.mensagemErro }}</div>
+              </div>
+            </div>
+            
+            <div class="card-actions">
+              <button 
+                class="btn-download"
+                (click)="onBaixarPdf($event, protocolo.id, protocolo.nomeArquivo)"
+                *ngIf="selectedProtocolo?.id === protocolo.id"
+                title="Baixar PDF"
+              >
+                <i class="fas fa-download"></i>
+                Baixar PDF
+              </button>
+              <button 
+                class="btn-compare" 
+                (click)="onComparar($event, protocolo.id)"
+                title="Comparar com Original"
+                *ngIf="selectedProtocolo?.id === protocolo.id"
+              >
+                <i class="fas fa-balance-scale"></i>
+                Comparar
+              </button>
+            </div>
+          </div>
+          
+          <!-- Mensagem quando não há protocolos no filtro -->
+          <div class="no-results" *ngIf="getFilteredProtocolos().length === 0 && statusFilter">
+            <i class="fas fa-filter"></i>
+            <p>Nenhum protocolo encontrado com o status "{{ statusFilter }}".</p>
+            <button class="btn btn-secondary" (click)="filterByStatus('')">
+              <i class="fas fa-times"></i> Limpar filtro
+            </button>
+          </div>
+        </div>
+
+        <!-- Mensagem quando não há protocolos -->
+        <div class="no-protocols" *ngIf="!loading && protocolos.length === 0">
+          <div>📋 Nenhum protocolo encontrado para o período selecionado.</div>
+        </div>
+      </div>
+
+      <!-- Painel direito - Dados Extraídos do Boleto -->
+      <div class="right-panel">
+        <div class="panel-title">Dados Extraídos do Boleto</div>
+        
+        <!-- Placeholder quando nenhum protocolo está selecionado -->
+        <div class="detail-placeholder" *ngIf="!selectedProtocolo">
+          Selecione um protocolo na lista ao lado para visualizar o boleto.
+        </div>
+
+        <!-- Loading dos detalhes -->
+        <div class="boleto-loading" *ngIf="selectedProtocolo && loadingDetails">
+          🔄 Carregando detalhes do boleto...
+        </div>
+
+        <!-- Erro ao carregar detalhes -->
+        <div class="boleto-error" *ngIf="selectedProtocolo && detailsError">
+          {{ detailsError }}
+        </div>
+
+        <!-- Dados Extraídos do Boleto -->
+        <div class="boleto-container" *ngIf="selectedProtocolo && boletoDetails && !loadingDetails">
+          <!-- Header do Boleto -->
+          <div class="boleto-header">
+            <div class="boleto-bank-info">
+              <div class="boleto-bank-logo">Banco</div>
+              <div class="boleto-bank-logo">Seu Banco</div>
+              <div class="boleto-bank-code">000-0</div>
+            </div>
+            <div class="boleto-linha-digitavel">
+              {{ formatBarcode(boletoDetails.codigoBarras) }}
+            </div>
+          </div>
+
+          <!-- Conteúdo principal -->
+          <div class="boleto-main-content">
+            <!-- Seção esquerda -->
+            <div class="boleto-left-section">
+              <!-- Beneficiário -->
+              <div class="boleto-beneficiario">
+                <div class="boleto-beneficiario-name">
+                  EMPRESA EXEMPLO LTDA - CNPJ: XXX.XXX.XXX/XXXX-XX
+                </div>
+                <div class="boleto-beneficiario-address">
+                  RUA EXEMPLO, 123, CIDADE EXEMPLO - SP
+                </div>
+              </div>
+
+              <!-- Informações do documento -->
+              <div class="boleto-document-info">
+                <div class="boleto-field-group">
+                  <div class="boleto-field-label">Número Documento</div>
+                  <div class="boleto-field-value">{{ boletoDetails.numeroDocumento }}</div>
+                </div>
+                <div class="boleto-field-group">
+                  <div class="boleto-field-label">Espécie Documento</div>
+                  <div class="boleto-field-value">13</div>
+                </div>
+                <div class="boleto-field-group">
+                  <div class="boleto-field-label">Aceite</div>
+                  <div class="boleto-field-value">N</div>
+                </div>
+                <div class="boleto-field-group">
+                  <div class="boleto-field-label">Vencimento</div>
+                  <div class="boleto-field-value large">{{ formatDate(boletoDetails.dataVencimento) }}</div>
+                </div>
+              </div>
+
+              <!-- Informações de uso -->
+              <div class="boleto-usage-info">
+                <div class="boleto-field-group">
+                  <div class="boleto-field-label">Espécie</div>
+                  <div class="boleto-field-value">R$</div>
+                </div>
+              </div>
+
+              <!-- Itens do Boleto -->
+              <div class="boleto-instructions">
+                <div class="boleto-instructions-title">Itens do Boleto</div>
+                
+                <!-- Tabela de itens -->
+                <div class="boleto-items-section">
+                  <table class="boleto-items-table">
+                    <thead>
+                      <tr>
+                        <th class="item-desc">Descrição</th>
+                        <th class="item-ref">Referência</th>
+                        <th class="item-valor">Valor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of boletoDetails.itens">
+                        <td class="item-desc">{{ item.descricao }}</td>
+                        <td class="item-ref">-</td>
+                        <td class="item-valor">{{ formatCurrency(item.valor) }}</td>
+                      </tr>
+                      <tr class="boleto-total-row">
+                        <td class="item-desc"><strong>Total:</strong></td>
+                        <td class="item-ref">-</td>
+                        <td class="item-valor">{{ formatCurrency(boletoDetails.valor) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Código de barras -->
+              <div class="boleto-barcode-section">
+                <div class="boleto-barcode-label">Código de Barras:</div>
+                <div class="boleto-barcode-value">{{ boletoDetails.codigoBarras }}</div>
+              </div>
+            </div>
+
+            <!-- Seção direita -->
+            <div class="boleto-right-section">
+              <div class="boleto-right-title">Recibo do Sacado</div>
+              
+              <div class="boleto-right-info">
+                <div class="boleto-field-group" style="margin-top: 16px;">
+                  <div class="boleto-field-value">NATURA COMERCIAL LTDA.</div>
+                </div>
+              </div>
+
+              <div class="boleto-agency-info">
+                <div class="boleto-field-group">
+                  <div class="boleto-field-label">Agência / Código Beneficiário</div>
+                  <div class="boleto-field-value">XXXXXXX</div>
+                </div>
+              </div>
+
+              <div class="boleto-field-group">
+                <div class="boleto-field-label">Nosso Número</div>
+                <div class="boleto-field-value">XXXXXXX</div>
+              </div>
+
+              <div class="boleto-field-group">
+                <div class="boleto-field-label">1 (=) Valor Documento</div>
+                <div class="boleto-field-value large">{{ formatCurrency(boletoDetails.valor) }}</div>
+              </div>
+
+              <div class="boleto-field-group">
+                <div class="boleto-field-label">2 (-) Desconto / Abatimento</div>
+                <div class="boleto-field-value">*********</div>
+              </div>
+
+              <div class="boleto-field-group">
+                <div class="boleto-field-label">3 (-) Outras Deduções</div>
+                <div class="boleto-field-value">*********</div>
+              </div>
+
+              <div class="boleto-field-group">
+                <div class="boleto-field-label">4 (+) Mora / Multa</div>
+                <div class="boleto-field-value">*********</div>
+              </div>
+
+              <div class="boleto-field-group">
+                <div class="boleto-field-label">5 (+) Outros acréscimos</div>
+                <div class="boleto-field-value">*********</div>
+              </div>
+
+              <div class="boleto-valor-final">
+                <div class="boleto-field-label">6 (=) Valor Cobrado</div>
+                <div class="boleto-field-value large">{{ formatCurrency(boletoDetails.valor) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal de Comparação -->
+<div class="modal-overlay" *ngIf="showCompareModal" (click)="closeCompareModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2><i class="fas fa-balance-scale" aria-hidden="true"></i> Comparação: Original vs Dados Extraídos</h2>
+      <button class="modal-close" (click)="closeCompareModal()" title="Fechar">
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="comparison-container">
+        <!-- Lado esquerdo - Imagem original -->
+        <div class="comparison-side">
+          <h3><i class="fas fa-file-pdf" aria-hidden="true"></i> Boleto Original</h3>
+          <div class="image-container" *ngIf="boletoImageBase64">
+            <img [src]="'data:' + boletoImageFormat + ';base64,' + boletoImageBase64" 
+                 alt="Boleto Original" 
+                 class="boleto-image"
+                 (wheel)="onImageWheel($event)"
+                 (mousedown)="onMouseDown($event)"
+                 (mousemove)="onMouseMove($event)"
+                 (mouseup)="onMouseUp($event)"
+                 (mouseleave)="onMouseUp($event)"
+                 [style.transform]="'scale(' + imageZoom + ') translate(' + imagePanX + 'px, ' + imagePanY + 'px)'"
+                 [style.transform-origin]="'center center'"
+                 [style.cursor]="imageZoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'"
+                 [style.user-select]="'none'"
+                 #boletoImg>
+          </div>
+          <div class="zoom-controls" *ngIf="boletoImageBase64">
+            <button class="zoom-btn" (click)="resetZoom()" title="Resetar Zoom e Posição">
+              <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i>
+            </button>
+            <span class="zoom-level">{{ Math.round(imageZoom * 100) }}%</span>
+            <span class="pan-hint" *ngIf="imageZoom > 1">
+              <i class="fas fa-hand-paper" aria-hidden="true"></i> Arraste para mover
+            </span>
+          </div>
+          <div class="loading-message" *ngIf="loadingImage">
+            <i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Carregando imagem...
+          </div>
+          <div class="error-message" *ngIf="imageError">
+            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i> {{ imageError }}
+          </div>
+        </div>
+        
+        <!-- Lado direito - Dados extraídos do boleto -->
+        <div class="comparison-side">
+          <h3><i class="fas fa-magic" aria-hidden="true"></i> Dados Extraídos do Boleto</h3>
+          <div class="extracted-boleto-container" *ngIf="boletoDetails">
+            <!-- Aqui vai o mesmo HTML dos dados extraídos do boleto -->
+            <div class="boleto-container">
+              <!-- Header do Boleto -->
+              <div class="boleto-header">
+                <div class="boleto-bank-info">
+                  <div class="boleto-bank-logo">Banco</div>
+                  <div class="boleto-bank-logo">Seu Banco</div>
+                  <div class="boleto-bank-code">000-0</div>
+                </div>
+                <div class="boleto-linha-digitavel">
+                  {{ formatBarcode(boletoDetails.codigoBarras) }}
+                </div>
+              </div>
+
+              <!-- Corpo do Boleto -->
+              <div class="boleto-body">
+                <div class="boleto-left-section">
+                  <!-- Beneficiário -->
+                  <div class="boleto-beneficiario">
+                    <div class="boleto-beneficiario-name">
+                      EMPRESA EXEMPLO LTDA - CNPJ: XXX.XXX.XXX/XXXX-XX
+                    </div>
+                    <div class="boleto-beneficiario-address">
+                      RUA EXEMPLO, 123, CIDADE EXEMPLO - SP
+                    </div>
+                  </div>
+
+                  <!-- Informações do documento -->
+                  <div class="boleto-document-info">
+                    <div class="boleto-field-group">
+                      <div class="boleto-field-label">Número Documento</div>
+                      <div class="boleto-field-value">{{ boletoDetails.numeroDocumento }}</div>
+                    </div>
+                  </div>
+
+                  <!-- Sacado -->
+                  <div class="boleto-sacado">
+                    <div class="boleto-sacado-title">Sacado</div>
+                    <div class="boleto-sacado-info">
+                      <div>NOME DO SACADO</div>
+                      <div>RUA DO SACADO, 123</div>
+                      <div>CIDADE - SP - CEP: 00000-000</div>
+                    </div>
+                  </div>
+
+                  <!-- Itens do Boleto -->
+                  <div class="boleto-instructions">
+                    <div class="boleto-instructions-title">Itens do Boleto</div>
+                    <div class="boleto-instructions-content">
+                      <div *ngFor="let item of boletoDetails.itens" class="boleto-instruction-item">
+                        {{ item.descricao }} - {{ formatCurrency(item.valor) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="boleto-right-section">
+                  <div class="boleto-recibo">
+                    <div class="boleto-recibo-title">Recibo do Sacado</div>
+                    
+                    <div class="boleto-field-group">
+                      <div class="boleto-field-label">Vencimento</div>
+                      <div class="boleto-field-value">{{ formatDate(boletoDetails.dataVencimento) }}</div>
+                    </div>
+
+                    <div class="boleto-field-group">
+                      <div class="boleto-field-label">Agência/Código</div>
+                      <div class="boleto-field-value">XXXXXXX</div>
+                    </div>
+
+                    <div class="boleto-field-group">
+                      <div class="boleto-field-label">Nosso Número</div>
+                      <div class="boleto-field-value">XXXXXXX</div>
+                    </div>
+
+                    <div class="boleto-field-group">
+                      <div class="boleto-field-label">1 (=) Valor do Documento</div>
+                      <div class="boleto-field-value large">{{ formatCurrency(boletoDetails.valor) }}</div>
+                    </div>
+
+                    <div class="boleto-field-group">
+                      <div class="boleto-field-label">2 (-) Desconto / Abatimento</div>
+                      <div class="boleto-field-value">*********</div>
+                    </div>
+
+                    <div class="boleto-field-group">
+                      <div class="boleto-field-label">3 (-) Outras Deduções</div>
+                      <div class="boleto-field-value">*********</div>
+                    </div>
+
+                    <div class="boleto-field-group">
+                      <div class="boleto-field-label">4 (+) Mora/Multa</div>
+                      <div class="boleto-field-value">*********</div>
+                    </div>
+
+                    <div class="boleto-field-group">
+                      <div class="boleto-field-label">5 (+) Outros Acréscimos</div>
+                      <div class="boleto-field-value">*********</div>
+                    </div>
+
+                    <div class="boleto-field-group">
+                      <div class="boleto-field-label">6 (=) Valor Cobrado</div>
+                      <div class="boleto-field-value large">{{ formatCurrency(boletoDetails.valor) }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

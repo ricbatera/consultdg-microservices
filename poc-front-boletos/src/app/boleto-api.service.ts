@@ -90,6 +90,24 @@ export class BoletoApiService {
     });
   }
 
+  async getAllProtocolos(dataInicial: string, dataFinal: string): Promise<any[]> {
+    const url = `${this.apiUrl}/get-all-protocolos?dataInicial=${dataInicial}&dataFinal=${dataFinal}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Erro ao buscar protocolos: ' + response.statusText);
+    }
+    return response.json();
+  }
+
+  async getBoletoDetails(protocoloId: number): Promise<any> {
+    const url = `${this.apiUrl}/get-boleto-details?protocoloId=${protocoloId}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Erro ao buscar detalhes do boleto: ' + response.statusText);
+    }
+    return response.json();
+  }
+
   private getFileNameFromResponse(response: Response): string | null {
     const disposition = response.headers.get('Content-Disposition');
     if (disposition) {

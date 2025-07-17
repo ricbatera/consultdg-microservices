@@ -10,6 +10,7 @@ import br.com.consultdg.database_mysql_service.repository.projection.ProtocoloBo
 import br.com.consultdg.api_boleto_service.service.ProcessaBoletoService;
 import br.com.consultdg.api_boleto_service.service.ProtocoloService;
 import br.com.consultdg.api_boleto_service.dto.AllProtocoloRequest;
+import br.com.consultdg.api_boleto_service.dto.BoletoDetailsResponse;
 import br.com.consultdg.api_boleto_service.dto.NovoBoletoRequest;
 import br.com.consultdg.api_boleto_service.dto.ResponseDefault;
 import br.com.consultdg.api_boleto_service.service.DownloadPdfService;
@@ -137,6 +138,11 @@ public class AppBoletoController {
 	@GetMapping("/get-all-protocolos")
 	public List<ProtocoloBoletoProjection> getAllProtocolo(@RequestParam String dataInicial, @RequestParam String dataFinal) {
 		return protocoloService.getProtocolosByDateInicialFinal(new AllProtocoloRequest(dataInicial, dataFinal));
+	}
+
+	@GetMapping("/get-boleto-details")
+	public BoletoDetailsResponse getBoletoDetails(@RequestParam Long protocoloId) {
+		return protocoloService.getBoletoDetailsByProtocoloId(protocoloId);
 	}
 	
 }
