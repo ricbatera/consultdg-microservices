@@ -1,5 +1,7 @@
 // Configuração da API
-const API_BASE_URL = 'http://localhost:8080/api/v1/email-to-ftp';
+const API_BASE_URL = window.API_CONFIG?.baseUrl || 
+                     process?.env?.API_BASE_URL || 
+                     'http://localhost:8080/api/v1/email-to-ftp';
 
 // Estado da aplicação
 let isConnected = false;
