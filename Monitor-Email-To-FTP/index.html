@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Email to FTP - ConsultDG</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo-section">
+                <img src="assets/img/DG_LogotipoCompleto_RGB.png" alt="ConsultDG" class="logo">
+            </div>
+            <h1 class="title">Monitor Email to FTP Service</h1>
+            <div class="status-indicator" id="serviceStatus">
+                <div class="status-dot"></div>
+                <span class="status-text">Verificando...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- Cards de Status -->
+            <section class="status-cards">
+                <div class="card">
+                    <div class="card-icon gmail">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-.904.732-1.636 1.636-1.636h.727L12 10.355l9.637-6.534h.727c.904 0 1.636.732 1.636 1.636z"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <h3>Conexão Gmail</h3>
+                        <p class="card-status" id="gmailStatus">Verificando...</p>
+                        <p class="card-detail" id="gmailDetail">Status da conexão IMAP</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon ftp">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <h3>Conexão FTP</h3>
+                        <p class="card-status" id="ftpStatus">Verificando...</p>
+                        <p class="card-detail" id="ftpDetail">Status do servidor FTP</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon process">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <h3>Processamento</h3>
+                        <p class="card-status" id="processStatus">Ativo</p>
+                        <p class="card-detail">Intervalo: 5 minutos</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Estatísticas -->
+            <section class="stats-section">
+                <div class="stats-header">
+                    <h2>Estatísticas de Processamento</h2>
+                    <div class="stats-actions">
+                        <button class="btn btn-secondary" onclick="refreshStats()">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                            </svg>
+                            Atualizar
+                        </button>
+                        <button class="btn btn-outline" onclick="resetStats()">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z"/>
+                            </svg>
+                            Resetar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="emailsProcessados">0</div>
+                        <div class="stat-label">Emails Processados</div>
+                        <div class="stat-trend positive" id="emailsTrend">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                            </svg>
+                            +12% hoje
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-number" id="anexosEnviados">0</div>
+                        <div class="stat-label">Anexos Enviados</div>
+                        <div class="stat-trend positive" id="anexosTrend">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                            </svg>
+                            +8% hoje
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-number" id="falhasUpload">0</div>
+                        <div class="stat-label">Falhas de Upload</div>
+                        <div class="stat-trend negative" id="falhasTrend">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z"/>
+                            </svg>
+                            -2% hoje
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-number" id="ultimaExecucao">--:--</div>
+                        <div class="stat-label">Última Execução</div>
+                        <div class="stat-detail" id="proximaExecucao">Próxima em 4min</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gráfico de Atividade -->
+            <section class="chart-section">
+                <div class="chart-header">
+                    <h2>Atividade nas Últimas 24 Horas</h2>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color emails"></div>
+                            <span>Emails</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color anexos"></div>
+                            <span>Anexos</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Controles Manuais -->
+            <section class="controls-section">
+                <div class="controls-header">
+                    <h2>Controles Manuais</h2>
+                </div>
+                <div class="controls-grid">
+                    <button class="control-btn primary" onclick="processEmails()">
+                        <div class="control-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </div>
+                        <div class="control-content">
+                            <h3>Processar Emails</h3>
+                            <p>Executa o processamento manual de emails</p>
+                        </div>
+                    </button>
+
+                    <button class="control-btn secondary" onclick="testConnections()">
+                        <div class="control-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                        </div>
+                        <div class="control-content">
+                            <h3>Testar Conexões</h3>
+                            <p>Verifica conectividade Gmail e FTP</p>
+                        </div>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Log de Atividades -->
+            <section class="log-section">
+                <div class="log-header">
+                    <h2>Log de Atividades</h2>
+                    <button class="btn btn-secondary" onclick="refreshLogs()">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                        </svg>
+                        Atualizar
+                    </button>
+                </div>
+                <div class="log-container" id="logContainer">
+                    <div class="log-entry success">
+                        <div class="log-time">15:42:33</div>
+                        <div class="log-message">Email processado com sucesso: 2 anexos enviados para FTP</div>
+                    </div>
+                    <div class="log-entry info">
+                        <div class="log-time">15:37:15</div>
+                        <div class="log-message">Iniciando verificação de emails não lidos</div>
+                    </div>
+                    <div class="log-entry warning">
+                        <div class="log-time">15:35:02</div>
+                        <div class="log-message">Nenhum email novo encontrado para processamento</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="assets/img/DG_Simbolo_RGB.png" alt="ConsultDG" class="footer-logo-img">
+                    <span>ConsultDG © 2025</span>
+                </div>
+                <div class="footer-info">
+                    <p>Email to FTP Service v1.0.0</p>
+                    <p>Serviço rodando em <strong>localhost:8080</strong></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
