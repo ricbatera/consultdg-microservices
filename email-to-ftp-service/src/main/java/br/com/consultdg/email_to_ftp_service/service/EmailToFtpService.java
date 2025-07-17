@@ -3,6 +3,7 @@ package br.com.consultdg.email_to_ftp_service.service;
 import br.com.consultdg.email_to_ftp_service.config.EmailProperties;
 import br.com.consultdg.email_to_ftp_service.model.EmailAttachment;
 import br.com.consultdg.email_to_ftp_service.model.EmailMessage;
+import br.com.consultdg.email_to_ftp_service.model.ValidationResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.mail.MessagingException;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,12 +34,20 @@ public class EmailToFtpService {
     @Autowired
     private EmailProperties emailProperties;
 
+    @Autowired
+    private AttachmentValidationService validationService;
+
+    @Autowired
+    private EmailResponseService responseService;
+
     @Value("${email.processing.interval}")
     private long processingInterval;
 
     private AtomicInteger processedEmails = new AtomicInteger(0);
     private AtomicInteger processedAttachments = new AtomicInteger(0);
     private AtomicInteger failedUploads = new AtomicInteger(0);
+    private AtomicInteger rejectedAttachments = new AtomicInteger(0);
+    private AtomicInteger correctionEmailsSent = new AtomicInteger(0);
     
     // Flag para evitar processamento concorrente
     private volatile boolean isProcessing = false;
@@ -121,11 +131,68 @@ public class EmailToFtpService {
             logger.info("De: {}", email.getFrom());
             logger.info("Total de anexos: {}", email.getAttachments().size());
 
-            boolean allUploadsSuccessful = true;
-            int anexoIndex = 1;
+            // Listas para organizar anexos válidos e inválidos
+            List<EmailAttachment> validAttachments = new ArrayList<>();
+            List<String> invalidPdfNames = new ArrayList<>();
+            List<String> invalidTypeFiles = new ArrayList<>();
 
+            // FASE 1: Validação de anexos
+            logger.info("--- FASE 1: VALIDAÇÃO DE ANEXOS ---");
+            int anexoIndex = 1;
             for (EmailAttachment attachment : email.getAttachments()) {
-                logger.info(">>> Processando anexo {}/{}: '{}'", anexoIndex, email.getAttachments().size(), attachment.getFileName());
+                String fileName = attachment.getFileName();
+                logger.debug("Validando anexo {}/{}: '{}'", anexoIndex, email.getAttachments().size(), fileName);
+                
+                ValidationResult validation = validationService.validateAttachment(fileName);
+                
+                if (validation.isValid()) {
+                    validAttachments.add(attachment);
+                    logger.info("✓ Anexo VÁLIDO ({}/{}): {}", anexoIndex, email.getAttachments().size(), fileName);
+                } else {
+                    rejectedAttachments.incrementAndGet();
+                    logger.warn("✗ Anexo REJEITADO ({}/{}): {} - {}", anexoIndex, email.getAttachments().size(), fileName, validation.getReason());
+                    
+                    // Categorizar tipo de rejeição
+                    if (fileName.toLowerCase().endsWith(".pdf")) {
+                        invalidPdfNames.add(fileName);
+                    } else {
+                        invalidTypeFiles.add(fileName);
+                    }
+                }
+                anexoIndex++;
+            }
+
+            logger.info("Resultado da validação: {} válidos, {} rejeitados (PDFs: {}, Tipos: {})", 
+                       validAttachments.size(), 
+                       invalidPdfNames.size() + invalidTypeFiles.size(),
+                       invalidPdfNames.size(),
+                       invalidTypeFiles.size());
+
+            // FASE 2: Enviar email de correção se necessário
+            if (!invalidPdfNames.isEmpty()) {
+                logger.info("--- FASE 2: ENVIANDO EMAIL DE CORREÇÃO ---");
+                try {
+                    responseService.sendNamingCorrectionRequest(email.getFrom(), email.getSubject(), invalidPdfNames);
+                    correctionEmailsSent.incrementAndGet();
+                    logger.info("✓ Email de correção enviado para: {}", email.getFrom());
+                } catch (Exception e) {
+                    logger.error("✗ Falha ao enviar email de correção para {}: {}", email.getFrom(), e.getMessage());
+                }
+            }
+
+            // FASE 3: Processar anexos válidos
+            if (validAttachments.isEmpty()) {
+                logger.warn("⚠ Nenhum anexo válido encontrado. Email não será processado para FTP.");
+                logger.info("=== FIM DO PROCESSAMENTO DO EMAIL (SEM ANEXOS VÁLIDOS) ===");
+                return;
+            }
+
+            logger.info("--- FASE 3: PROCESSAMENTO FTP DE {} ANEXOS VÁLIDOS ---", validAttachments.size());
+            boolean allUploadsSuccessful = true;
+            anexoIndex = 1;
+
+            for (EmailAttachment attachment : validAttachments) {
+                logger.info(">>> Enviando anexo {}/{}: '{}'", anexoIndex, validAttachments.size(), attachment.getFileName());
                 logger.info("    Tamanho: {} bytes", attachment.getSize());
                 
                 boolean uploadSuccess = ftpService.uploadAttachment(attachment, email.getSubject(), email.getReceivedDate());
@@ -133,24 +200,26 @@ public class EmailToFtpService {
                 if (uploadSuccess) {
                     processedAttachments.incrementAndGet();
                     logger.info("✓ Anexo '{}' do email '{}' enviado com SUCESSO (#{}/{})", 
-                              attachment.getFileName(), email.getSubject(), anexoIndex, email.getAttachments().size());
+                              attachment.getFileName(), email.getSubject(), anexoIndex, validAttachments.size());
                 } else {
                     allUploadsSuccessful = false;
                     failedUploads.incrementAndGet();
                     logger.error("✗ FALHA no envio do anexo '{}' do email '{}' (#{}/{}) - Verifique logs anteriores para detalhes do erro FTP", 
-                               attachment.getFileName(), email.getSubject(), anexoIndex, email.getAttachments().size());
+                               attachment.getFileName(), email.getSubject(), anexoIndex, validAttachments.size());
                 }
                 anexoIndex++;
             }
 
+            // FASE 4: Finalização
             if (allUploadsSuccessful) {
                 email.setProcessed(true);
                 processedEmails.incrementAndGet();
-                logger.info("✓ Email '{}' processado com SUCESSO - Todos os {} anexos foram enviados", 
-                          email.getSubject(), email.getAttachments().size());
+                logger.info("✓ Email '{}' processado com SUCESSO - Todos os {} anexos válidos foram enviados", 
+                          email.getSubject(), validAttachments.size());
             } else {
-                logger.warn("⚠ Email '{}' processado com FALHAS - Nem todos os anexos foram enviados", email.getSubject());
+                logger.warn("⚠ Email '{}' processado com FALHAS - Nem todos os anexos válidos foram enviados", email.getSubject());
             }
+            
             logger.info("=== FIM DO PROCESSAMENTO DO EMAIL ===");
 
         } catch (Exception e) {
@@ -162,7 +231,9 @@ public class EmailToFtpService {
         return new ProcessingStats(
             processedEmails.get(),
             processedAttachments.get(),
-            failedUploads.get()
+            failedUploads.get(),
+            rejectedAttachments.get(),
+            correctionEmailsSent.get()
         );
     }
 
@@ -170,7 +241,9 @@ public class EmailToFtpService {
         processedEmails.set(0);
         processedAttachments.set(0);
         failedUploads.set(0);
-        logger.info("Estatísticas de processamento zeradas");
+        rejectedAttachments.set(0);
+        correctionEmailsSent.set(0);
+        logger.info("Estatísticas de processamento zeradas (incluindo validação e correções)");
     }
 
     public boolean testConnections() {
@@ -245,10 +318,18 @@ public class EmailToFtpService {
         @Schema(description = "Número de uploads que falharam", example = "2")
         private final int failedUploads;
 
-        public ProcessingStats(int processedEmails, int processedAttachments, int failedUploads) {
+        @Schema(description = "Número de anexos rejeitados por validação", example = "3")
+        private final int rejectedAttachments;
+
+        @Schema(description = "Número de emails de correção enviados", example = "1")
+        private final int correctionEmailsSent;
+
+        public ProcessingStats(int processedEmails, int processedAttachments, int failedUploads, int rejectedAttachments, int correctionEmailsSent) {
             this.processedEmails = processedEmails;
             this.processedAttachments = processedAttachments;
             this.failedUploads = failedUploads;
+            this.rejectedAttachments = rejectedAttachments;
+            this.correctionEmailsSent = correctionEmailsSent;
         }
 
         public int getProcessedEmails() {
@@ -263,12 +344,22 @@ public class EmailToFtpService {
             return failedUploads;
         }
 
+        public int getRejectedAttachments() {
+            return rejectedAttachments;
+        }
+
+        public int getCorrectionEmailsSent() {
+            return correctionEmailsSent;
+        }
+
         @Override
         public String toString() {
             return "ProcessingStats{" +
                     "processedEmails=" + processedEmails +
                     ", processedAttachments=" + processedAttachments +
                     ", failedUploads=" + failedUploads +
+                    ", rejectedAttachments=" + rejectedAttachments +
+                    ", correctionEmailsSent=" + correctionEmailsSent +
                     '}';
         }
     }

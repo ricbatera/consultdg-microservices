@@ -15,6 +15,9 @@ Serviço Spring Boot que conecta ao Gmail via IMAP, busca emails com anexos e os
 - ✅ **Processamento de múltiplos anexos** por email
 - ✅ **Controle de concorrência** para evitar conflitos
 - ✅ **Marca emails como lidos** após processamento (configurável)
+- 🆕 **Filtro de tipos de arquivo** - aceita apenas PDF e XML
+- 🆕 **Validação de nomenclatura PDF** - arquivos devem começar com P_ ou X_
+- 🆕 **Resposta automática** - solicita correção de nomes inválidos
 
 ## Configuração
 
@@ -63,6 +66,16 @@ email.processing.mark-as-read=true
 # Timeout para processamento (em milissegundos) - 5 minutos
 email.processing.timeout=300000
 
+# 🆕 Configurações de validação de anexos
+validation.enabled=true
+validation.allowed-extensions=pdf,xml
+validation.pdf.required-prefixes=P_,X_
+validation.send-correction-emails=true
+
+# 🆕 Configurações de resposta automática por email
+email.response.enabled=true
+email.response.from-name=Sistema Processamento Automático ConsultDG
+
 # Configurações de log para diagnóstico
 logging.level.br.com.consultdg=DEBUG
 ```
@@ -99,6 +112,10 @@ O serviço expõe as seguintes endpoints:
 - **POST** `/api/v1/email-to-ftp/stats/reset` - Zera as estatísticas
 - **POST** `/api/v1/email-to-ftp/force-reset` - 🆕 Força reset em caso de travamento
 
+### 🆕 Validação e Teste
+- **POST** `/api/v1/email-to-ftp/test-validation?fileName=arquivo.pdf` - Testa validação de arquivo
+- **POST** `/api/v1/email-to-ftp/test-email-response` - Testa configuração de envio de email
+
 ### 🆕 Exemplo de resposta do `/status`:
 ```json
 {
@@ -108,8 +125,20 @@ O serviço expõe as seguintes endpoints:
   "stats": {
     "processedEmails": 3,
     "processedAttachments": 8,
-    "failedUploads": 0
+    "failedUploads": 0,
+    "rejectedAttachments": 2,
+    "correctionEmailsSent": 1
   },
+  "timestamp": 1642194456789
+}
+```
+
+### 🆕 Exemplo de resposta do `/test-validation`:
+```json
+{
+  "fileName": "documento.pdf",
+  "valid": false,
+  "reason": "Nome do arquivo PDF deve começar com 'P_' ou 'X_'.",
   "timestamp": 1642194456789
 }
 ```
@@ -305,11 +334,37 @@ curl http://localhost:8080/api/v1/email-to-ftp/status
 # Testar conexões
 curl http://localhost:8080/api/v1/email-to-ftp/test-connections
 
+# Testar validação de arquivo
+curl -X POST "http://localhost:8080/api/v1/email-to-ftp/test-validation?fileName=P_123456_documento.pdf"
+curl -X POST "http://localhost:8080/api/v1/email-to-ftp/test-validation?fileName=documento.pdf"
+
+# Testar configuração de email de resposta
+curl -X POST http://localhost:8080/api/v1/email-to-ftp/test-email-response
+
 # Se travado, forçar reset
 curl -X POST http://localhost:8080/api/v1/email-to-ftp/force-reset
 
 # Zerar estatísticas
 curl -X POST http://localhost:8080/api/v1/email-to-ftp/stats/reset
+```
+
+### 🆕 4. Testando Validação de Anexos
+```bash
+# Exemplos de validação de arquivos
+curl -X POST "http://localhost:8080/api/v1/email-to-ftp/test-validation?fileName=P_123456_relatorio.pdf"
+# Resposta: {"fileName": "P_123456_relatorio.pdf", "valid": true, "reason": "Arquivo válido"}
+
+curl -X POST "http://localhost:8080/api/v1/email-to-ftp/test-validation?fileName=X_789012_documento.pdf"  
+# Resposta: {"fileName": "X_789012_documento.pdf", "valid": true, "reason": "Arquivo válido"}
+
+curl -X POST "http://localhost:8080/api/v1/email-to-ftp/test-validation?fileName=relatorio.pdf"
+# Resposta: {"fileName": "relatorio.pdf", "valid": false, "reason": "Nome do arquivo PDF deve começar com 'P_' ou 'X_'."}
+
+curl -X POST "http://localhost:8080/api/v1/email-to-ftp/test-validation?fileName=dados.xml"
+# Resposta: {"fileName": "dados.xml", "valid": true, "reason": "Arquivo válido"}
+
+curl -X POST "http://localhost:8080/api/v1/email-to-ftp/test-validation?fileName=planilha.xlsx"
+# Resposta: {"fileName": "planilha.xlsx", "valid": false, "reason": "Tipo de arquivo não permitido. Apenas arquivos PDF e XML são aceitos."}
 ```
 
 ## 🤝 Contribuição

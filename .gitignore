@@ -79,6 +79,7 @@ build/
 /email-to-ftp/.classpath
 /email-to-ftp/.project
 /email-to-ftp/.mvn/
+/email-to-ftp/.env
 
 /poc-front-boletos/node_modules/
 /poc-front-boletos/dist/

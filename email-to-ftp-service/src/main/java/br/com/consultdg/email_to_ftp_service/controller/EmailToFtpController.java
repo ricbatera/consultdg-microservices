@@ -168,4 +168,77 @@ public class EmailToFtpController {
         EmailToFtpService.SchedulingInfo schedulingInfo = emailToFtpService.getSchedulingInfo();
         return ResponseEntity.ok(schedulingInfo);
     }
+
+    @Operation(summary = "Testar validação de arquivo", description = "Testa a validação de nomenclatura de um arquivo")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Validação executada com sucesso",
+                    content = @Content(mediaType = "application/json"))
+    })
+    @PostMapping("/test-validation")
+    public ResponseEntity<Map<String, Object>> testFileValidation(@RequestParam String fileName) {
+        try {
+            // Injeção manual do serviço se necessário
+            if (validationService == null) {
+                return ResponseEntity.ok(Map.of(
+                    "error", "Serviço de validação não disponível",
+                    "timestamp", System.currentTimeMillis()
+                ));
+            }
+
+            var validation = validationService.validateAttachment(fileName);
+            
+            return ResponseEntity.ok(Map.of(
+                "fileName", fileName,
+                "valid", validation.isValid(),
+                "reason", validation.getReason() != null ? validation.getReason() : "Arquivo válido",
+                "timestamp", System.currentTimeMillis()
+            ));
+        } catch (Exception e) {
+            logger.error("Erro ao testar validação para '{}': {}", fileName, e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                "fileName", fileName,
+                "error", e.getMessage(),
+                "timestamp", System.currentTimeMillis()
+            ));
+        }
+    }
+
+    @Operation(summary = "Testar envio de email de correção", description = "Testa o envio de email de correção de nomenclatura")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Teste executado com sucesso",
+                    content = @Content(mediaType = "application/json"))
+    })
+    @PostMapping("/test-email-response")
+    public ResponseEntity<Map<String, Object>> testEmailResponse() {
+        try {
+            if (responseService == null) {
+                return ResponseEntity.ok(Map.of(
+                    "error", "Serviço de resposta de email não disponível",
+                    "timestamp", System.currentTimeMillis()
+                ));
+            }
+
+            boolean canSend = responseService.testEmailSending();
+            
+            return ResponseEntity.ok(Map.of(
+                "emailTestResult", canSend,
+                "message", canSend ? "Configuração de email OK" : "Falha na configuração de email",
+                "timestamp", System.currentTimeMillis()
+            ));
+        } catch (Exception e) {
+            logger.error("Erro ao testar envio de email: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                "emailTestResult", false,
+                "error", e.getMessage(),
+                "timestamp", System.currentTimeMillis()
+            ));
+        }
+    }
+
+    // Injeção manual dos novos serviços se o autowired não funcionar
+    @Autowired(required = false)
+    private br.com.consultdg.email_to_ftp_service.service.AttachmentValidationService validationService;
+
+    @Autowired(required = false)
+    private br.com.consultdg.email_to_ftp_service.service.EmailResponseService responseService;
 }
