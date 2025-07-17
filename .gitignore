@@ -75,5 +75,10 @@ build/
 /tesseract-service/.project
 /tesseract-service/.mvn/
 
+/email-to-ftp/target/
+/email-to-ftp/.classpath
+/email-to-ftp/.project
+/email-to-ftp/.mvn/
+
 /poc-front-boletos/node_modules/
 /poc-front-boletos/dist/
