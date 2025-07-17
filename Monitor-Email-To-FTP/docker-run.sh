@@ -3,7 +3,7 @@
 # Script para construir e executar o container Docker
 # Uso: ./docker-run.sh [API_URL] [PORTA]
 
-API_URL=${1:-"http://172.20.21.8:11000/api/v1/email-to-ftp"}
+API_URL=${1:-"http://201.77.115.146:11000/api/v1/email-to-ftp"}
 PORTA=${2:-"11001"}
 CONTAINER_NAME="monitor-email-to-ftp"
 
