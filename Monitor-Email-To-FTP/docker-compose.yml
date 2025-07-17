@@ -5,7 +5,7 @@ services:
     build: .
     container_name: monitor-email-to-ftp
     ports:
-      - "8081:80"  # Porta externa:interna
+      - "11001:80"  # Porta externa:interna
     environment:
       # URL da API - MODIFIQUE CONFORME NECESSÁRIO
       - API_BASE_URL=http://172.20.21.8:11000/api/v1/email-to-ftp

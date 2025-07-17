@@ -13,7 +13,7 @@ if "%ENVIRONMENT%"=="development" (
 ) else if "%ENVIRONMENT%"=="staging" (
     set API_URL=https://staging-api.exemplo.com/api/v1/email-to-ftp
 ) else if "%ENVIRONMENT%"=="production" (
-    set API_URL=https://api.exemplo.com/api/v1/email-to-ftp
+    set API_URL=https://172.20.21.8:11000/api/v1/email-to-ftp
 ) else (
     echo Ambiente inválido. Use: development, staging ou production
     exit /b 1

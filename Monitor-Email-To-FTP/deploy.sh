@@ -16,7 +16,7 @@ case $ENVIRONMENT in
         API_URL="https://staging-api.exemplo.com/api/v1/email-to-ftp"
         ;;
     "production")
-        API_URL="https://api.exemplo.com/api/v1/email-to-ftp"
+        API_URL="https://172.20.21.8:11000/api/v1/email-to-ftp"
         ;;
     *)
         echo "Ambiente inválido. Use: development, staging ou production"
