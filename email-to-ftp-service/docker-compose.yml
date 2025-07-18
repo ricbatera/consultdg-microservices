@@ -20,15 +20,14 @@ services:
       # Variáveis do host - usando ${NOME_VARIAVEL} ou ${NOME_VARIAVEL:-valor_padrao}
       - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
       - EMAIL_PORT=${EMAIL_PORT:-587}
-      - EMAIL_USERNAME=${EMAIL_USERNAME}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
-      - FTP_HOST=${FTP_HOST}
+      - EMAIL_USERNAME=${EMAIL_USERNAME:-}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
+      - FTP_HOST=${FTP_HOST:-}
       - FTP_PORT=${FTP_PORT:-21}
-      - FTP_USERNAME=${FTP_USERNAME}
-      - FTP_PASSWORD=${FTP_PASSWORD}
+      - FTP_USERNAME=${FTP_USERNAME:-}
+      - FTP_PASSWORD=${FTP_PASSWORD:-}
       
       # Outras variáveis do sistema (exemplos)
-      - JAVA_HOME=${JAVA_HOME}
       - TZ=${TZ:-America/Sao_Paulo}
       
     volumes:

@@ -3,7 +3,7 @@
 # ===========================================
 
 # Stage 1: Build da aplicação
-FROM maven:3.9.6-openjdk-17-slim AS build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 # Definir diretório de trabalho
 WORKDIR /app
@@ -27,15 +27,13 @@ RUN mvn clean package -DskipTests
 # Stage 2: Runtime da aplicação
 # ===========================================
 
-FROM openjdk:17-jdk-slim AS runtime
+FROM eclipse-temurin:17-jre-alpine AS runtime
 
 # Instalar utilitários necessários
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl
 
 # Criar usuário não-root para segurança
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN addgroup -g 1001 -S appuser && adduser -u 1001 -S appuser -G appuser
 
 # Definir diretório de trabalho
 WORKDIR /app
