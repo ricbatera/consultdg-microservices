@@ -39,10 +39,64 @@ let chartHistory = {
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
+    initializeTheme();
     initializeApp();
     setupAutoRefresh();
     initializeChart();
 });
+
+// Inicializar tema
+function initializeTheme() {
+    // Verificar se há preferência salva no localStorage
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Definir tema inicial
+    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+    setTheme(initialTheme);
+    
+    // Escutar mudanças na preferência do sistema
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!localStorage.getItem('theme')) {
+            setTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+}
+
+// Alternar tema
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Log da mudança de tema
+    addLogEntry('info', `Tema alterado para ${newTheme === 'dark' ? 'escuro' : 'claro'}`);
+}
+
+// Definir tema
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    
+    // Atualizar gráfico se existir para se adaptar ao novo tema
+    if (chart) {
+        updateChartTheme(theme);
+    }
+}
+
+// Atualizar tema do gráfico
+function updateChartTheme(theme) {
+    const isDark = theme === 'dark';
+    const gridColor = isDark ? '#374151' : '#E5E7EB';
+    const textColor = isDark ? '#E5E7EB' : '#2C3E50';
+    
+    chart.options.scales.y.grid.color = gridColor;
+    chart.options.scales.x.grid.color = gridColor;
+    chart.options.scales.y.ticks.color = textColor;
+    chart.options.scales.x.ticks.color = textColor;
+    
+    chart.update('none'); // Update sem animação
+}
 
 // Inicializar aplicação
 async function initializeApp() {
@@ -593,6 +647,12 @@ function initializeChart() {
     // Inicializar histórico com dados zerados das últimas 24 horas
     initializeChartHistory();
     
+    // Detectar tema atual
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const isDark = currentTheme === 'dark';
+    const gridColor = isDark ? '#374151' : '#E5E7EB';
+    const textColor = isDark ? '#E5E7EB' : '#2C3E50';
+    
     chart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -625,15 +685,19 @@ function initializeChart() {
                 y: {
                     beginAtZero: true,
                     grid: {
-                        color: '#E5E7EB'
+                        color: gridColor
                     },
                     ticks: {
-                        stepSize: 1
+                        stepSize: 1,
+                        color: textColor
                     }
                 },
                 x: {
                     grid: {
-                        color: '#E5E7EB'
+                        color: gridColor
+                    },
+                    ticks: {
+                        color: textColor
                     }
                 }
             },
@@ -789,7 +853,9 @@ function showNotification(message, type = 'info') {
 
 // Simular logs iniciais
 setTimeout(() => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
     addLogEntry('info', 'Sistema de monitoramento iniciado');
+    addLogEntry('info', `Tema ${currentTheme === 'dark' ? 'escuro' : 'claro'} ativado`);
     addLogEntry('success', 'Conexões testadas com sucesso');
     addLogEntry('info', 'Auto-refresh configurado para 30 segundos');
 }, 1000);
