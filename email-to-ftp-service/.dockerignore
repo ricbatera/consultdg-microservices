@@ -1,0 +1,57 @@
+# ===========================================
+# DOCKERFILE IGNORE - OTIMIZAÇÃO DE BUILD
+# ===========================================
+
+# Diretórios de build e cache
+target/
+.mvn/wrapper/maven-wrapper.jar
+.m2/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Arquivos de configuração local
+.env
+.env.local
+application-local.properties
+
+# Documentação e arquivos desnecessários
+README.md
+HELP.md
+AMBIENTES.md
+PRODUCAO.md
+SWAGGER.md
+*.md
+*.svg
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Arquivos de teste
+**/test/**
+**/*Test.java
+**/*Tests.java
